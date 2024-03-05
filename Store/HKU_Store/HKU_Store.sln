@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34622.214
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HKU_Store.Server", "HKU_Store.Server\HKU_Store.Server.csproj", "{7C1DE1C5-6F53-4BA8-8B8A-C47F0CC962C3}"
+EndProject
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "hku_store.client", "hku_store.client\hku_store.client.esproj", "{E4999D20-FEF9-41B4-9CF9-99F27D2972D7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7C1DE1C5-6F53-4BA8-8B8A-C47F0CC962C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C1DE1C5-6F53-4BA8-8B8A-C47F0CC962C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C1DE1C5-6F53-4BA8-8B8A-C47F0CC962C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C1DE1C5-6F53-4BA8-8B8A-C47F0CC962C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E4999D20-FEF9-41B4-9CF9-99F27D2972D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E4999D20-FEF9-41B4-9CF9-99F27D2972D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E4999D20-FEF9-41B4-9CF9-99F27D2972D7}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{E4999D20-FEF9-41B4-9CF9-99F27D2972D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E4999D20-FEF9-41B4-9CF9-99F27D2972D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E4999D20-FEF9-41B4-9CF9-99F27D2972D7}.Release|Any CPU.Deploy.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {42013E44-2403-4D5A-832E-A6B30385BC36}
+	EndGlobalSection
+EndGlobal

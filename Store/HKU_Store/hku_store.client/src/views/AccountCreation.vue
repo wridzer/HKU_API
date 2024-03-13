@@ -1,75 +1,110 @@
 <template>
-    <div class="register">
-        <h1>Create Account</h1>
-        <form @submit.prevent="register">
+    <div class="form-container">
+        <h2>Register</h2>
+        <form @submit.prevent="register" class="register-form">
             <div class="form-group">
                 <label for="name">Name:</label>
-                <input type="text" id="name" v-model="user.name" required>
+                <input id="name" v-model="name" required>
             </div>
             <div class="form-group">
                 <label for="email">Email:</label>
-                <input type="email" id="email" v-model="user.email" required>
+                <input type="email" id="email" v-model="email" required>
             </div>
             <div class="form-group">
                 <label for="password">Password:</label>
-                <input type="password" id="password" v-model="user.password" required>
+                <input type="password" id="password" v-model="password" required>
             </div>
-            <button type="submit">Create Account</button>
+            <div class="form-group">
+                <label for="birthDate">Birth Date:</label>
+                <input type="date" id="birthDate" v-model="birthDate" required>
+            </div>
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input id="username" v-model="username" required>
+            </div>
+            <button type="submit" class="submit-btn">Register</button>
         </form>
     </div>
 </template>
 
-<script setup>import { ref } from 'vue';
+<script setup>
+    import { ref } from 'vue';
+    import axios from 'axios';
 
-const user = ref({
-  name: '',
-  email: '',
-  password: '',
-});
+    const name = ref('');
+    const email = ref('');
+    const password = ref('');
+    const birthDate = ref('');
+    const username = ref('');
 
-function register() {
-  // Hier zou je registratielogica implementeren.
-  // Dit kan een API-aanroep zijn naar je server die op zijn beurt OpenID of een andere dienst gebruikt.
-  console.log('Registering:', user.value);
-  // Normaal zou je hier feedback geven aan de gebruiker, bijvoorbeeld door een succesbericht te tonen of door te navigeren naar een inlogpagina.
-}</script>
+    const register = async () => {
+        try {
+            await axios.post('/api/users/register', {
+                name: name.value,
+                email: email.value,
+                password: password.value,
+                birthDate: birthDate.value,
+                username: username.value,
+            });
+            alert('Registration successful!');
+        } catch (error) {
+            console.error(error);
+            alert('Registration failed.');
+        }
+    };
+</script>
+
 
 <style scoped>
-    .register {
-        max-width: 300px;
-        margin: auto;
-        padding: 20px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-    }
+.form-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border-radius: 8px;
+}
 
-    .form-group {
-        margin-bottom: 20px;
-    }
+.register-form {
+    display: flex;
+    flex-direction: column;
+}
 
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-        }
+.form-group {
+    margin-bottom: 20px;
+}
 
-        .form-group input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
 
-    button {
-        width: 100%;
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.submit-btn {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.submit-btn:hover {
+    background-color: #0056b3;
+}
+
+@media (max-width: 768px) {
+    .form-container {
         padding: 10px;
-        border: none;
-        background-color: #007bff;
-        color: white;
-        cursor: pointer;
-        border-radius: 4px;
     }
 
-        button:hover {
-            background-color: #0056b3;
-        }
+    .submit-btn {
+        padding: 10px;
+    }
+}
 </style>

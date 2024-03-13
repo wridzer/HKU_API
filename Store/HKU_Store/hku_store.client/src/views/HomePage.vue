@@ -6,11 +6,15 @@
         <button v-if="!isLoggedIn" @click="goToLogin">Log In</button>
         <button v-if="!isLoggedIn" @click="goToRegister">Create Account</button>
     </div>
+    <div id="app">
+        <users-list></users-list>
+    </div>
 </template>
 
 <script setup>
     import { ref } from 'vue'
     import { useRouter } from 'vue-router'
+    import UsersList from './UserList.vue'
 
     // Een gesimuleerde manier om de inlogstatus van een gebruiker te controleren
     const isLoggedIn = ref(false)

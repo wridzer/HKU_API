@@ -19,8 +19,7 @@
 
 namespace HKU_API {
 
-	extern "C" EXPORT typedef void(*HKU_CALLBACK)(std::string[]);
-	extern "C" EXPORT void GetUsers(HKU_CALLBACK callback, void* context);
+	extern "C" EXPORT void GetUsers(void (*callback)(char** users, int length, void* context), void* context = nullptr);
 
 }
 

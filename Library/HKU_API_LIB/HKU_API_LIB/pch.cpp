@@ -17,9 +17,7 @@ namespace HKU_API {
         return realSize;
     }
 
-    void GetUsers(HKU_CALLBACK callback, void* context) {
-
-        std::vector<std::string> users = {"peter", "wridzer", "maurice"};
+    void GetUsers(void (*callback)(char** users, int length, void* context), void* context) {
 
         //CURL* curl = curl_easy_init();
         //std::string readBuffer;
@@ -41,6 +39,11 @@ namespace HKU_API {
         //    curl_easy_cleanup(curl);
         //}
 
-        callback(users.data());
+            // Handmatig een array van gebruikersnamen opstellen.
+        const char* users[] = { "peter", "wridzer", "maurice" };
+        int numberOfUsers = sizeof(users) / sizeof(char*);
+
+        // Roep de callback aan met de array en het aantal gebruikers.
+        callback(const_cast<char**>(users), numberOfUsers, context);
     }
 }

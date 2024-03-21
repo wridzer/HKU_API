@@ -39,7 +39,7 @@ namespace HKU_API {
         //    curl_easy_cleanup(curl);
         //}
 
-            // Handmatig een array van gebruikersnamen opstellen.
+        // Handmatig een array van gebruikersnamen opstellen.
         const char* users[] = { "peter", "wridzer", "maurice" };
         int numberOfUsers = sizeof(users) / sizeof(char*);
 

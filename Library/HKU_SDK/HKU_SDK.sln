@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34622.214
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HKU_SDK", "HKU_SDK\HKU_SDK.vcxproj", "{93C3B475-31CF-42AE-B2EB-570DB777BCF0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{93C3B475-31CF-42AE-B2EB-570DB777BCF0}.Debug|x64.ActiveCfg = Debug|x64
+		{93C3B475-31CF-42AE-B2EB-570DB777BCF0}.Debug|x64.Build.0 = Debug|x64
+		{93C3B475-31CF-42AE-B2EB-570DB777BCF0}.Debug|x86.ActiveCfg = Debug|Win32
+		{93C3B475-31CF-42AE-B2EB-570DB777BCF0}.Debug|x86.Build.0 = Debug|Win32
+		{93C3B475-31CF-42AE-B2EB-570DB777BCF0}.Release|x64.ActiveCfg = Release|x64
+		{93C3B475-31CF-42AE-B2EB-570DB777BCF0}.Release|x64.Build.0 = Release|x64
+		{93C3B475-31CF-42AE-B2EB-570DB777BCF0}.Release|x86.ActiveCfg = Release|Win32
+		{93C3B475-31CF-42AE-B2EB-570DB777BCF0}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {72E79762-DB1A-4A1B-846E-E00D71E17ACE}
+	EndGlobalSection
+EndGlobal

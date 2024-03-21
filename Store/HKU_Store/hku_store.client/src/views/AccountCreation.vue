@@ -43,13 +43,12 @@
                 name: name.value,
                 email: email.value,
                 password: password.value,
-                birthDate: birthDate.value,
                 username: username.value,
             });
             alert('Registration successful!');
         } catch (error) {
             console.error(error);
-            alert('Registration failed.');
+            alert('Registration failed: ' + error.response.data.ToString());
         }
     };
 </script>

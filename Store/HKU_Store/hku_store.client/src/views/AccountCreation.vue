@@ -48,8 +48,20 @@
             alert('Registration successful!');
         } catch (error) {
             console.error(error);
-            alert('Registration failed: ' + error.response.data.ToString());
+            let errorMessage = 'Registration failed: ';
+
+            if (error.response && error.response.data) {
+                const errors = error.response.data;
+                Object.keys(errors).forEach(key => {
+                    errors[key].forEach(msg => errorMessage += msg + ' ');
+                });
+            } else {
+                errorMessage += 'Unknown error';
+            }
+
+            alert(errorMessage.trim());
         }
+
     };
 </script>
 

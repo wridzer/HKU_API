@@ -28,6 +28,7 @@ public class UsersController : ControllerBase
         public string Username { get; set; }
 
         [Required]
+        [DataType(DataType.Text)]
         public string Name { get; set; }
 
         [Required]

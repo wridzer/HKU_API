@@ -12,17 +12,36 @@
 </template>
 
 <script setup>
-    import { ref } from 'vue'
+    import { ref, onMounted } from 'vue'
     import { useRouter } from 'vue-router'
     import UsersList from './UserList.vue'
+    import axios from 'axios'
 
     // Een gesimuleerde manier om de inlogstatus van een gebruiker te controleren
     const isLoggedIn = ref(false)
+    const userName = ref('')
 
     const router = useRouter()
 
+    const checkLoginStatus = async () => {
+        try {
+            const response = await axios.get('/api/users/currentuser')
+            if (response.data) {
+                isLoggedIn.value = true
+                userName.value = response.data.userName
+            } else {
+                isLoggedIn.value = false
+            }
+        } catch (error) {
+            isLoggedIn.value = false
+            console.error('Error fetching current user:', error)
+        }
+    }
+
+    onMounted(checkLoginStatus)
+
     function goToLogin() {
-        router.push('/login')
+        router.push('/LoginUser')
     }
 
     function goToRegister() {
@@ -40,5 +59,10 @@
         margin: 10px;
         padding: 10px 20px;
         cursor: pointer;
+    }
+
+    #app {
+        max-width: 90%; 
+        margin: auto; 
     }
 </style>

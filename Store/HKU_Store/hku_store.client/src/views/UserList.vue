@@ -1,9 +1,9 @@
 <template>
-    <div>
+    <div class="user-list-container">
         <h2>Gebruikerslijst</h2>
         <ul>
             <li v-for="user in users" :key="user.id">
-                {{ user.name }} - {{ user.email }}
+                {{ user.userName }} - {{ user.email }}
             </li>
         </ul>
     </div>
@@ -18,7 +18,6 @@ import { ref, onMounted } from 'vue';
 
             onMounted(async () => {
                 const response = await fetch('/api/users');
-                console.error(response, response.text);
                 users.value = await response.json();
             });
 
@@ -26,3 +25,11 @@ import { ref, onMounted } from 'vue';
         }
     }
 </script>
+
+<style scoped>
+    .user-list-container ul {
+        width: 100%; 
+        max-width: 800px; 
+        margin: auto;
+    }
+</style>

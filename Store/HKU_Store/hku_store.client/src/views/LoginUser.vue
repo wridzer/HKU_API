@@ -4,11 +4,11 @@
         <form @submit.prevent="login">
             <div class="form-group">
                 <label for="email">Email:</label>
-                <input type="email" id="email" v-model="credentials.email" required>
+                <input type="email" id="email" v-model="email" required>
             </div>
             <div class="form-group">
                 <label for="password">Password:</label>
-                <input type="password" id="password" v-model="credentials.password" required>
+                <input type="password" id="password" v-model="password" required>
             </div>
             <button type="submit">Log In</button>
         </form>
@@ -17,17 +17,37 @@
 
 <script setup>
     import { ref } from 'vue';
+    import axios from 'axios';
+    import { useRouter } from 'vue-router'
 
-    const credentials = ref({
-        email: '',
-        password: '',
-    });
+    const email = ref('');
+    const password = ref('');
+    const router = useRouter()
 
-    function login() {
-        // Voeg hier je inloglogica toe
-        console.log('Logging in with:', credentials.value);
-        // Normaal zou je hier een API call doen om de gebruiker te authenticeren
-    }
+    const login = async () => {
+        try {
+            await axios.post('/api/users/login', {
+                email: email.value,
+                password: password.value,
+            });
+            alert('Login successful!');
+            router.push('/');
+        } catch (error) {
+            console.error(error);
+            let errorMessage = 'Login failed: ';
+
+            if (error.response && error.response.data) {
+                const errors = error.response.data;
+                Object.keys(errors).forEach(key => {
+                    errors[key].forEach(msg => errorMessage += msg + ' ');
+                });
+            } else {
+                errorMessage += 'Unknown error';
+            }
+
+            alert(errorMessage.trim());
+        }
+    };
 </script>
 
 <style scoped>

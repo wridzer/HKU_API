@@ -17,4 +17,5 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
 
 
     public DbSet<ApplicationUser> AppUsers { get; set; }
+    public DbSet<ApplicationProject> AppProjects { get; set; }
 }

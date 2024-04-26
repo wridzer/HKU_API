@@ -1,13 +1,14 @@
 <template>
-    <div class="home">
-        <h1>Welcome to Our App</h1>
-        <p v-if="isLoggedIn">You are logged in!</p>
-        <p v-else>You are not logged in.</p>
-        <button v-if="!isLoggedIn" @click="goToLogin">Log In</button>
-        <button v-if="!isLoggedIn" @click="goToRegister">Create Account</button>
-    </div>
-    <div id="app">
-        <users-list></users-list>
+    <div>
+        <h1>Welcome to Our Application!</h1>
+        <!-- Show logout button if the user is logged in -->
+        <button v-if="isLoggedIn" @click="logout">Logout</button>
+        <button v-if="isLoggedIn" @click="EditProfile">Edit profile</button>
+        <!-- Show login and account creation buttons if the user is not logged in -->
+        <div v-else>
+            <button @click="goToLogin">Login</button>
+            <button @click="goToRegister">Create Account</button>
+        </div>
     </div>
 </template>
 
@@ -39,6 +40,21 @@
     }
 
     onMounted(checkLoginStatus)
+
+    const logout = async () => {
+      try {
+        const response = await axios.post('/api/users/logout');
+        alert('Logged out successfully');
+        checkLoginStatus();
+        router.push('/');
+      } catch (error) {
+        console.error('Logout failed:', error.response.data);
+      }
+    }
+
+    function EditProfile() {
+        router.push('/UpdateProfile')
+    }
 
     function goToLogin() {
         router.push('/LoginUser')

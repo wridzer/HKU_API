@@ -18,6 +18,7 @@ public class UsersController : ControllerBase
         _signInManager = signInManager;
     }
 
+    // Get all/current users
     [HttpGet]
     public async Task<IActionResult> GetUsers()
     {
@@ -26,25 +27,53 @@ public class UsersController : ControllerBase
             .ToListAsync();
         return Ok(users);
     }
+    [HttpGet("currentuser")]
+    public async Task<IActionResult> GetCurrentUser()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user != null)
+        {
+            return Ok(new { user.Id, user.UserName, user.Email });
+        }
+        return NotFound();
+    }
+    // GET: api/users/by-username/{username}
+    [HttpGet("by-username/{username}")]
+    public async Task<IActionResult> GetUserIdByUsername(string username)
+    {
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            return BadRequest("Username is required");
+        }
 
+        var user = await _userManager.FindByNameAsync(username);
+        if (user == null)
+        {
+            return NotFound("User not found");
+        }
+
+        return Ok(new { UserId = user.Id });
+    }
+
+
+    // Register new user
     public class RegisterModel
     {
         [Required]
-        public string Username { get; set; }
+        public string? Username { get; set; }
 
         [Required]
         [DataType(DataType.Text)]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         [Required]
         [EmailAddress]
-        public string Email { get; set; }
+        public string? Email { get; set; }
 
         [Required]
         [DataType(DataType.Password)]
-        public string Password { get; set; }
+        public string? Password { get; set; }
     }
-
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterModel model)
     {
@@ -68,17 +97,17 @@ public class UsersController : ControllerBase
         return BadRequest(ModelState);
     }
 
+    // Login/logout user
     public class LoginModel
     {
         [Required]
         [EmailAddress]
-        public string Email { get; set; }
+        public string? Email { get; set; }
 
         [Required]
         [DataType(DataType.Password)]
-        public string Password { get; set; }
+        public string? Password { get; set; }
     }
-
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginModel model)
     {
@@ -104,17 +133,40 @@ public class UsersController : ControllerBase
         }
         return BadRequest(ModelState);
     }
-
-    [HttpGet("currentuser")]
-    public async Task<IActionResult> GetCurrentUser()
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
     {
-        var user = await _userManager.GetUserAsync(User);
-        if (user != null)
-        {
-            return Ok(new { user.UserName, user.Email });
-        }
-        return NotFound();
+        await _signInManager.SignOutAsync();
+        return Ok("Logged out successfully.");
     }
 
+    // Update user profile
+    [HttpPost("updateprofile")]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileModel model)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            return NotFound("User not found.");
+        }
 
+        user.Email = model.Email;
+        user.UserName = model.Username;
+        var result = await _userManager.UpdateAsync(user);
+
+        if (!result.Succeeded)
+        {
+            return BadRequest(result.Errors);
+        }
+
+        return Ok("Profile updated successfully.");
+    }
+    public class UpdateProfileModel
+    {
+        [Required]
+        public string? Username { get; set; }
+        [Required]
+        [EmailAddress]
+        public string? Email { get; set; }
+    }
 }

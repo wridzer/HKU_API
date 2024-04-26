@@ -1,10 +1,16 @@
-<script setup lang="ts">
+<script setup>
+    import { ref } from 'vue';
+    import Sidebar from './views/Sidebar.vue';
 
+    const sidebar = ref(null);
 </script>
 
 <template>
     <div id="app">
-        <router-view />
+        <Sidebar />
+        <div class="content">
+            <router-view />
+        </div>
     </div>
 </template>
 
@@ -16,6 +22,23 @@ header {
 .logo {
   display: block;
   margin: 0 auto 2rem;
+}
+
+#app {
+    display: flex;
+    height: 100vh; /* Volledige hoogte van het viewport */
+}
+
+.sidebar {
+    width: 200px; /* Of een andere vaste breedte */
+    background-color: #f4f4f4; /* Achtergrondkleur van de sidebar */
+}
+
+.content {
+    flex: 1; /* Neemt de resterende ruimte in beslag */
+    overflow: auto; /* Voegt scroll toe indien nodig */
+    padding: 20px;
+    padding-top: 200px;
 }
 
 @media (min-width: 1024px) {

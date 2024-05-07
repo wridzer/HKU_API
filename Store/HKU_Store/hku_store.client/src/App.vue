@@ -39,6 +39,16 @@ header {
     overflow: auto; /* Voegt scroll toe indien nodig */
     padding: 20px;
     padding-top: 200px;
+    flex-grow: 1; /* Takes up all available space */
+    margin-left: 200px; /* Space for the sidebar */
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* Prevents scrollbars if not needed */
 }
 
 @media (min-width: 1024px) {
@@ -57,5 +67,6 @@ header {
     place-items: flex-start;
     flex-wrap: wrap;
   }
+
 }
 </style>

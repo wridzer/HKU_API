@@ -21,6 +21,7 @@
         padding: 20px;
         background-image: linear-gradient(135deg, #211d67, #8e5e67, #fe879f, #fe1f4c);
         border-radius: 4px;
+        z-index: 1000;
     }
 
     .sidebar-header {

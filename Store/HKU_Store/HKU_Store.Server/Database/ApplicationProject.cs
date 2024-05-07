@@ -19,7 +19,5 @@ public class ApplicationProject<TKey> where TKey : IEquatable<TKey>
     public virtual List<string> Contributors { get; set; } = new List<string>();
     public virtual string Name { get; set; } = string.Empty;
     public virtual string Description { get; set; } = string.Empty;
-
-    //- Table of leaderboardData
     public virtual string Image { get; set; } = string.Empty;
 }

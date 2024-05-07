@@ -28,6 +28,7 @@ onMounted(async () => {
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
         gap: 20px;
         padding: 20px;
+        width: calc(100% - 200px);
     }
 
     .project {
@@ -47,4 +48,5 @@ onMounted(async () => {
     h2, p {
         padding: 0 15px;
     }
+
 </style>

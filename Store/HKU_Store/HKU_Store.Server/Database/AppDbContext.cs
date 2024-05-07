@@ -15,7 +15,14 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     {
     }
 
-
     public DbSet<ApplicationUser> AppUsers { get; set; }
     public DbSet<ApplicationProject> AppProjects { get; set; }
+    public DbSet<AppLeaderboardInfo> AppLeaderboardsInfo { get; set; }
+
+    // Method to execute SQL Commands for dynamic tables
+    public async Task ExecuteSqlCommand(string sql)
+    {
+        await Database.ExecuteSqlRawAsync(sql);
+    }
+
 }

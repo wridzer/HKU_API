@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h1>Welcome to Our Application!</h1>
+        <h1>Account settings</h1>
         <!-- Show logout button if the user is logged in -->
         <button v-if="isLoggedIn" @click="logout">Logout</button>
         <button v-if="isLoggedIn" @click="EditProfile">Edit profile</button>

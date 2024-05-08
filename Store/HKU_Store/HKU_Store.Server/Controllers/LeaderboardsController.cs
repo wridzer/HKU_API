@@ -37,12 +37,46 @@ public class LeaderboardsController : ControllerBase
     [HttpPost("addentry/{leaderboardId}")]
     public async Task<IActionResult> AddEntryToLeaderboard(string leaderboardId, [FromBody] AppLeaderboard entry)
     {
-        string tableName = $"Leaderboard_{leaderboardId}";
-        string sql = $"INSERT INTO {tableName} (PlayerID, Score) VALUES ('{entry.PlayerID}', {entry.Score})";
-        await _context.ExecuteSqlCommand(sql);
+        var leaderboardInfo = await _context.AppLeaderboardsInfo.FindAsync(leaderboardId);
+        if (leaderboardInfo == null)
+            return NotFound("Leaderboard not found.");
 
-        return Ok("Entry added successfully.");
+        var connection = _context.Database.GetDbConnection();
+
+        try
+        {
+            await connection.OpenAsync();
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = $"SELECT Score FROM `Leaderboard_{leaderboardId}` WHERE PlayerID = '{entry.PlayerID}'";
+                var currentScoreObj = await command.ExecuteScalarAsync(); // safer, as it returns the first column of the first row
+                int? currentScore = currentScoreObj as int?;
+
+                bool shouldUpdate = currentScore == null ||
+                                    (leaderboardInfo.SortMethod == ESortMethod.Descending && entry.Score > currentScore) ||
+                                    (leaderboardInfo.SortMethod == ESortMethod.Ascending && entry.Score < currentScore);
+
+                if (shouldUpdate)
+                {
+                    command.CommandText = currentScore == null ?
+                                          $"INSERT INTO `Leaderboard_{leaderboardId}` (PlayerID, Score) VALUES ('{entry.PlayerID}', {entry.Score})" :
+                                          $"UPDATE `Leaderboard_{leaderboardId}` SET Score = {entry.Score} WHERE PlayerID = '{entry.PlayerID}'";
+                    await command.ExecuteNonQueryAsync();
+                }
+
+                command.CommandText = $"SELECT COUNT(*) FROM `Leaderboard_{leaderboardId}` WHERE Score {(leaderboardInfo.SortMethod == ESortMethod.Descending ? ">" : "<")} {entry.Score}";
+                var rank = 1 + Convert.ToInt32(await command.ExecuteScalarAsync());
+
+                return Ok(new { Message = "Entry added successfully.", Rank = rank });
+            }
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
     }
+
+
 
     // Update leaderboard configuration
     [HttpPut("update/{leaderboardId}")]
@@ -100,7 +134,7 @@ public class LeaderboardsController : ControllerBase
                     entries.Add(new AppLeaderboard
                     {
                         PlayerID = result.GetString(result.GetOrdinal("PlayerID")),
-                        Score = result.GetString(result.GetOrdinal("Score"))
+                        Score = result.GetFloat(result.GetOrdinal("Score"))
                     });
                 }
                 return Ok(entries);

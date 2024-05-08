@@ -25,7 +25,7 @@ extern "C" EXPORT void ConfigureProject(char** project_ID, void (*callback)(bool
 extern "C" EXPORT void Login(char** username, char** password, void(*callback)(bool IsSucces, void* context), void* context = nullptr);
 extern "C" EXPORT void Logout(void (*callback)(bool IsSucces, void* context), void* context = nullptr);
 extern "C" EXPORT void GetUser(char** user_ID, void (*callback)(char** username, int length, void* context), void* context = nullptr);
-extern "C" EXPORT void UploadLeaderboardScore(char** project_ID, char** user_ID, void (*callback)(bool IsSucces, int currentRank, void* context), void* context = nullptr);
+extern "C" EXPORT void UploadLeaderboardScore(char** leaderboard, int score, void (*callback)(bool IsSucces, int currentRank, void* context), void* context = nullptr);
 
 
 #endif //PCH_H

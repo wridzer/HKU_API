@@ -3,6 +3,7 @@
 #include "pch.h"
 #include <iostream>
 #include <cstring>
+#include <sstream>
 #define CURL_STATICLIB
 #include <curl/curl.h>
 #include <nlohmann/json.hpp>
@@ -69,3 +70,73 @@ void GetUsers(void (*callback)(char** users, int length, void* context), void* c
     }
     //delete[] users; // Vrijgeven van de array
 }
+
+void ConfigureProject(char** project_ID, void(*callback)(bool IsSucces, void* context), void* context)
+{
+}
+
+void Login(char** username, char** password, void(*callback)(bool IsSucces, void* context), void* context)
+{
+}
+
+void Logout(void(*callback)(bool IsSucces, void* context), void* context)
+{
+}
+
+void GetUser(char** user_ID, void(*callback)(char** username, int length, void* context), void* context)
+{
+}
+
+void UploadLeaderboardScore(char** leaderboard, int score, void(*callback)(bool IsSuccess, int currentRank, void* context), void* context)
+{
+    CURL* curl;
+    CURLcode res;
+    struct curl_slist* headers = NULL;
+    std::string readBuffer; // Buffer to hold response data
+
+    // JSON data construction
+    nlohmann::json dataJson = {
+        {"PlayerID", *currentUser},
+        {"Score", score}
+    };
+    std::string jsonData = dataJson.dump();
+
+    // URL construction
+    std::string url = "https://localhost:5173/api/leaderboards/addentry/" + std::string(*leaderboard);
+
+    curl = curl_easy_init();
+    if (curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        headers = curl_slist_append(headers, "Content-Type: application/json");
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonData.c_str());
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+
+        res = curl_easy_perform(curl);
+        if (res == CURLE_OK) {
+            try {
+                auto responseJson = nlohmann::json::parse(readBuffer);
+                int rank = responseJson["Rank"];
+                std::cout << "Request performed successfully! Rank: " << rank << std::endl;
+                callback(true, rank, context);
+            }
+            catch (nlohmann::json::exception& e) {
+                std::cerr << "JSON parsing error: " << e.what() << std::endl;
+                callback(false, -1, context);
+            }
+        }
+        else {
+            std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+            callback(false, -1, context);
+        }
+
+        curl_easy_cleanup(curl);
+        curl_slist_free_all(headers);
+    }
+    else {
+        std::cerr << "Failed to initialize CURL." << std::endl;
+        callback(false, -1, context);
+    }
+}
+

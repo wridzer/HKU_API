@@ -30,5 +30,5 @@ public class AppLeaderboardInfo
 public class AppLeaderboard
 {
     public string PlayerID { get; set; } = string.Empty;
-    public string Score { get; set; } = string.Empty;
+    public float Score { get; set; } = 0.0f;
 }

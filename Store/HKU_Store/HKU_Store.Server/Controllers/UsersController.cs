@@ -113,26 +113,26 @@ public class UsersController : ControllerBase
     {
         if (ModelState.IsValid)
         {
-            // Zoek de gebruiker op via e-mailadres
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
             {
-                ModelState.AddModelError(string.Empty, "Ongeldige inlogpoging.");
+                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                 return BadRequest(ModelState);
             }
             var result = await _signInManager.PasswordSignInAsync(user.UserName, model.Password, isPersistent: false, lockoutOnFailure: false);
             if (result.Succeeded)
             {
-                return Ok(); // Of retourneer een relevante response
+                return Ok(); // Or return a relevant response
             }
             else
             {
-                ModelState.AddModelError(string.Empty, "Ongeldige inlogpoging.");
+                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                 return BadRequest(ModelState);
             }
         }
         return BadRequest(ModelState);
     }
+
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {

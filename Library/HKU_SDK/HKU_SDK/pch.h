@@ -22,7 +22,9 @@ char** currentUser;
 
 extern "C" EXPORT void GetUsers(void (*callback)(char** users, int length, void* context), void* context = nullptr);
 extern "C" EXPORT void ConfigureProject(char** project_ID, void (*callback)(bool IsSucces, void* context), void* context = nullptr);
-extern "C" EXPORT void Login(char** username, char** password, void(*callback)(bool IsSucces, void* context), void* context = nullptr);
+extern "C" EXPORT void OpenLoginPage();
+extern "C" EXPORT void PollLoginStatus(void(*callback)(bool IsSucces, void* context), void* context);
+extern "C" EXPORT void CancelPolling();
 extern "C" EXPORT void Logout(void (*callback)(bool IsSucces, void* context), void* context = nullptr);
 extern "C" EXPORT void GetUser(char** user_ID, void (*callback)(char** username, int length, void* context), void* context = nullptr);
 extern "C" EXPORT void UploadLeaderboardScore(char** leaderboard, int score, void (*callback)(bool IsSucces, int currentRank, void* context), void* context = nullptr);

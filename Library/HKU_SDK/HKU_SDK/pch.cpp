@@ -4,6 +4,8 @@
 #include <iostream>
 #include <cstring>
 #include <sstream>
+#include <thread>
+#include <chrono>
 #define CURL_STATICLIB
 #include <curl/curl.h>
 #include <nlohmann/json.hpp>
@@ -73,21 +75,208 @@ void GetUsers(void (*callback)(char** users, int length, void* context), void* c
 
 void ConfigureProject(char** project_ID, void(*callback)(bool IsSucces, void* context), void* context)
 {
+	CURL* curl;
+	CURLcode res;
+	struct curl_slist* headers = NULL;
+	std::string readBuffer; // Buffer to hold response data
+
+	// JSON data construction
+	nlohmann::json dataJson = {
+		{"ProjectID", *project_ID},
+		{"PlayerID", *currentUser}
+	};
+	std::string jsonData = dataJson.dump();
+
+	// URL construction
+	std::string url = "https://localhost:5173/api/projects/configure";
+
+	curl = curl_easy_init();
+	if (curl) {
+		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+		headers = curl_slist_append(headers, "Content-Type: application/json");
+		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonData.c_str());
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+
+		res = curl_easy_perform(curl);
+		if (res == CURLE_OK) {
+			try {
+				auto responseJson = nlohmann::json::parse(readBuffer);
+				bool success = responseJson["Success"];
+				std::cout << "Request performed successfully! Success: " << success << std::endl;
+				callback(success, context);
+			}
+			catch (nlohmann::json::exception& e) {
+				std::cerr << "JSON parsing error: " << e.what() << std::endl;
+				callback(false, context);
+			}
+		}
+		else {
+			std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+			callback(false, context);
+		}
+
+		curl_easy_cleanup(curl);
+		curl_slist_free_all(headers);
+	}
+	else {
+		std::cerr << "Failed to initialize CURL." << std::endl;
+		callback(false, context);
+	}
 }
 
-void Login(char** username, char** password, void(*callback)(bool IsSucces, void* context), void* context)
+void OpenLoginPage()
 {
+        const char* url = "https://localhost:5173/login";
+#ifdef _WIN32
+        std::string command = "start " + std::string(url);
+#elif __APPLE__
+        std::string command = "open " + std::string(url);
+#elif __linux__
+        std::string command = "xdg-open " + std::string(url);
+#endif
+        system(command.c_str());
+}
+
+std::atomic<bool> pollingActive(false);
+
+void PollLoginStatus(void(*callback)(bool IsSucces, void* context), void* context)
+{
+    pollingActive.store(true);
+    CURL* curl;
+    CURLcode res;
+    struct curl_slist* headers = NULL;
+    std::string readBuffer;
+
+    curl = curl_easy_init();
+    if (curl) {
+        while (pollingActive.load()) {
+            readBuffer.clear();
+            curl_easy_setopt(curl, CURLOPT_URL, "https://localhost:5173/api/users/currentuser");
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+
+            res = curl_easy_perform(curl);
+            if (res == CURLE_OK) {
+                try {
+                    auto responseJson = nlohmann::json::parse(readBuffer);
+                    if (!responseJson.is_null()) {
+                        callback(true, context);
+                        pollingActive.store(false);
+                        break;
+                    }
+                }
+                catch (nlohmann::json::exception& e) {
+                    std::cerr << "JSON parsing error: " << e.what() << std::endl;
+                }
+            }
+            else {
+                std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+            }
+
+            std::this_thread::sleep_for(std::chrono::seconds(5)); // Wait for 5 seconds before polling again
+        }
+
+        curl_easy_cleanup(curl);
+    }
+    else {
+        std::cerr << "Failed to initialize CURL." << std::endl;
+        callback(false, context);
+    }
+}
+
+void CancelPolling() {
+    pollingActive.store(false);
 }
 
 void Logout(void(*callback)(bool IsSucces, void* context), void* context)
 {
+	CURL* curl;
+	CURLcode res;
+	struct curl_slist* headers = NULL;
+	std::string readBuffer;
+
+	curl = curl_easy_init();
+	if (curl) {
+		curl_easy_setopt(curl, CURLOPT_URL, "https://localhost:5173/api/users/logout");
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+
+		res = curl_easy_perform(curl);
+		if (res == CURLE_OK) {
+			try {
+				auto responseJson = nlohmann::json::parse(readBuffer);
+				bool success = responseJson["Success"];
+				std::cout << "Request performed successfully! Success: " << success << std::endl;
+				callback(success, context);
+			}
+			catch (nlohmann::json::exception& e) {
+				std::cerr << "JSON parsing error: " << e.what() << std::endl;
+				callback(false, context);
+			}
+		}
+		else {
+			std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+			callback(false, context);
+		}
+
+		curl_easy_cleanup(curl);
+	}
+	else {
+		std::cerr << "Failed to initialize CURL." << std::endl;
+		callback(false, context);
+	}
 }
 
 void GetUser(char** user_ID, void(*callback)(char** username, int length, void* context), void* context)
 {
+	CURL* curl;
+	CURLcode res;
+	struct curl_slist* headers = NULL;
+	std::string readBuffer; // Buffer to hold response data
+
+	// URL construction
+	std::string url = "https://localhost:5173/api/users/" + std::string(*user_ID);
+
+	curl = curl_easy_init();
+	if (curl) {
+		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+		headers = curl_slist_append(headers, "Content-Type: application/json");
+		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+
+		res = curl_easy_perform(curl);
+		if (res == CURLE_OK) {
+			try {
+				auto responseJson = nlohmann::json::parse(readBuffer);
+				std::string username = responseJson["userName"];
+				std::cout << "Request performed successfully! Username: " << username << std::endl;
+				char* usernameCopy = new char[username.length() + 1];
+				strcpy_s(usernameCopy, username.length() + 1, username.c_str());
+				callback(&usernameCopy, 1, context);
+			}
+			catch (nlohmann::json::exception& e) {
+				std::cerr << "JSON parsing error: " << e.what() << std::endl;
+				callback(nullptr, 0, context);
+			}
+		}
+		else {
+			std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+			callback(nullptr, 0, context);
+		}
+
+		curl_easy_cleanup(curl);
+		curl_slist_free_all(headers);
+	}
+	else {
+		std::cerr << "Failed to initialize CURL." << std::endl;
+		callback(nullptr, 0, context);
+	}
 }
 
-void UploadLeaderboardScore(char** leaderboard, int score, void(*callback)(bool IsSuccess, int currentRank, void* context), void* context)
+void UploadLeaderboardScore(char** leaderboard, int score, void(*callback)(bool IsSucces, int currentRank, void* context), void* context)
 {
     CURL* curl;
     CURLcode res;

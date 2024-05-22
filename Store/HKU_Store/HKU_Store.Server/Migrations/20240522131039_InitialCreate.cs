@@ -5,7 +5,7 @@
 namespace HKU_Store.Server.Migrations
 {
     /// <inheritdoc />
-    public partial class stringtofloat : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

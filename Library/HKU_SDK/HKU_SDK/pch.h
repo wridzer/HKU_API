@@ -18,10 +18,10 @@
 #endif
 
 char** project_ID;
-char** currentUser;
+std::string currentUser;
 
 extern "C" EXPORT void GetUsers(void (*callback)(char** users, int length, void* context), void* context = nullptr);
-extern "C" EXPORT void ConfigureProject(char** project_ID, void (*callback)(bool IsSucces, void* context), void* context = nullptr);
+extern "C" EXPORT void ConfigureProject(const char* project_ID, void(*callback)(bool IsSuccess, void* context), void* context = nullptr);
 extern "C" EXPORT void OpenLoginPage();
 extern "C" EXPORT void PollLoginStatus(void(*callback)(bool IsSucces, void* context), void* context);
 extern "C" EXPORT void CancelPolling();

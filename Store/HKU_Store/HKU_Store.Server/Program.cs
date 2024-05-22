@@ -12,15 +12,14 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
-    ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
-// ASP.NET Core Identity configuratie
+// ASP.NET Core Identity configuration
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders()
@@ -48,7 +47,7 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 });
 
 app.UseExceptionHandler("/Error");
-// De HSTS middleware
+// The HSTS middleware
 app.UseHsts();
 
 app.UseRouting();
@@ -58,8 +57,7 @@ app.UseAuthorization();
 
 app.UseEndpoints(endpoints =>
 {
-    endpoints.MapControllers(); // Voor API-routes
+    endpoints.MapControllers(); // For API routes
 });
-
 
 app.Run();

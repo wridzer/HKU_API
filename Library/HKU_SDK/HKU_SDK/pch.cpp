@@ -9,6 +9,7 @@
 #define CURL_STATICLIB
 #include <curl/curl.h>
 #include <nlohmann/json.hpp>
+#include <unordered_set>
 
 static size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* data) {
     size_t realSize = size * nmemb;
@@ -73,62 +74,64 @@ void GetUsers(void (*callback)(char** users, int length, void* context), void* c
     //delete[] users; // Vrijgeven van de array
 }
 
-void ConfigureProject(char** project_ID, void(*callback)(bool IsSucces, void* context), void* context)
+// A set to store unique project IDs
+std::unordered_set<std::string> projectIDStore;
+
+extern "C" void ConfigureProject(const char* project_ID, void(*callback)(bool IsSuccess, void* context), void* context)
 {
-	CURL* curl;
-	CURLcode res;
-	struct curl_slist* headers = NULL;
-	std::string readBuffer; // Buffer to hold response data
+    CURL* curl;
+    CURLcode res;
+    std::string readBuffer;
 
-	// JSON data construction
-	nlohmann::json dataJson = {
-		{"ProjectID", *project_ID},
-		{"PlayerID", *currentUser}
-	};
-	std::string jsonData = dataJson.dump();
+    // URL to fetch the project by ID
+    std::string checkUrl = "https://localhost:5173/api/projects/" + std::string(project_ID);
 
-	// URL construction
-	std::string url = "https://localhost:5173/api/projects/configure";
+    curl = curl_easy_init();
+    if (curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, checkUrl.c_str());
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
 
-	curl = curl_easy_init();
-	if (curl) {
-		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-		headers = curl_slist_append(headers, "Content-Type: application/json");
-		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonData.c_str());
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        res = curl_easy_perform(curl);
+        if (res != CURLE_OK) {
+            std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+            callback(false, context);
+            curl_easy_cleanup(curl);
+            return;
+        }
 
-		res = curl_easy_perform(curl);
-		if (res == CURLE_OK) {
-			try {
-				auto responseJson = nlohmann::json::parse(readBuffer);
-				bool success = responseJson["Success"];
-				std::cout << "Request performed successfully! Success: " << success << std::endl;
-				callback(success, context);
-			}
-			catch (nlohmann::json::exception& e) {
-				std::cerr << "JSON parsing error: " << e.what() << std::endl;
-				callback(false, context);
-			}
-		}
-		else {
-			std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
-			callback(false, context);
-		}
+        try {
+            auto responseJson = nlohmann::json::parse(readBuffer);
+            if (responseJson.is_null()) {
+                std::cerr << "Project does not exist." << std::endl;
+                callback(false, context);
+                curl_easy_cleanup(curl);
+                return;
+            }
 
-		curl_easy_cleanup(curl);
-		curl_slist_free_all(headers);
-	}
-	else {
-		std::cerr << "Failed to initialize CURL." << std::endl;
-		callback(false, context);
-	}
+            // Save the project ID locally
+            projectIDStore.insert(project_ID);
+
+            std::cout << "Project ID saved locally: " << project_ID << std::endl;
+            callback(true, context);
+
+        }
+        catch (nlohmann::json::exception& e) {
+            std::cerr << "JSON parsing error: " << e.what() << std::endl;
+            callback(false, context);
+        }
+
+        curl_easy_cleanup(curl);
+    }
+    else {
+        std::cerr << "Failed to initialize CURL." << std::endl;
+        callback(false, context);
+    }
 }
 
 void OpenLoginPage()
 {
-        const char* url = "https://localhost:5173/login";
+        const char* url = "https://localhost:5173/LoginUser";
 #ifdef _WIN32
         std::string command = "start " + std::string(url);
 #elif __APPLE__
@@ -141,12 +144,11 @@ void OpenLoginPage()
 
 std::atomic<bool> pollingActive(false);
 
-void PollLoginStatus(void(*callback)(bool IsSucces, void* context), void* context)
+void PollLoginStatus(void(*callback)(bool IsSuccess, void* context), void* context)
 {
     pollingActive.store(true);
     CURL* curl;
     CURLcode res;
-    struct curl_slist* headers = NULL;
     std::string readBuffer;
 
     curl = curl_easy_init();
@@ -161,10 +163,17 @@ void PollLoginStatus(void(*callback)(bool IsSucces, void* context), void* contex
             if (res == CURLE_OK) {
                 try {
                     auto responseJson = nlohmann::json::parse(readBuffer);
-                    if (!responseJson.is_null()) {
+                    std::cout << "Response JSON: " << responseJson.dump(4) << std::endl;
+
+                    if (!responseJson.is_null() && responseJson.contains("id")) {
+                        std::string currentUser = responseJson["id"].get<std::string>();
+                        std::cout << "User logged in with ID: " << currentUser << std::endl;
                         callback(true, context);
                         pollingActive.store(false);
                         break;
+                    }
+                    else {
+                        std::cerr << "Response does not contain 'id'." << std::endl;
                     }
                 }
                 catch (nlohmann::json::exception& e) {
@@ -175,7 +184,7 @@ void PollLoginStatus(void(*callback)(bool IsSucces, void* context), void* contex
                 std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
             }
 
-            std::this_thread::sleep_for(std::chrono::seconds(5)); // Wait for 5 seconds before polling again
+            std::this_thread::sleep_for(std::chrono::seconds(3));
         }
 
         curl_easy_cleanup(curl);
@@ -185,6 +194,7 @@ void PollLoginStatus(void(*callback)(bool IsSucces, void* context), void* contex
         callback(false, context);
     }
 }
+
 
 void CancelPolling() {
     pollingActive.store(false);
@@ -285,7 +295,7 @@ void UploadLeaderboardScore(char** leaderboard, int score, void(*callback)(bool 
 
     // JSON data construction
     nlohmann::json dataJson = {
-        {"PlayerID", *currentUser},
+        {"PlayerID", currentUser},
         {"Score", score}
     };
     std::string jsonData = dataJson.dump();

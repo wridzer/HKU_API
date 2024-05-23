@@ -182,17 +182,15 @@
 </script>
 
 <style scoped>
+
     .main-content {
-        margin-left: 200px; /* Space equal to the sidebar width */
         display: flow;
-        justify-content: center; /* Center content horizontally */
-        align-items: flex-start; /* Center content vertically */
-        min-height: 100vh; /* Full viewport height */
+        justify-content: left; /* Center content horizontally */
         max-width: calc(100% - 200px); /* Full width minus sidebar width */
-        min-width: 0; /* Resets minimum width to enable shrinking */
+        min-width: 1000px; /* Resets minimum width to enable shrinking */
         padding: 20px; /* Provides some internal spacing */
-        overflow: hidden;
-        flow-from:none;
+        margin-top: 0;
+        padding-top: 0;
     }
 
     .form-container {
@@ -266,7 +264,7 @@
         padding: 10px;
         border-radius: 5px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        width: 100%;
+        width: 80%;
     }
 
     .leaderboard_list_item {

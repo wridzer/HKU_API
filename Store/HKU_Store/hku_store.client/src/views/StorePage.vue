@@ -28,7 +28,8 @@ onMounted(async () => {
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
         gap: 20px;
         padding: 20px;
-        width: calc(100% - 200px);
+        max-width: calc(100% - 200px);
+        width: 1000px;
     }
 
     .project {

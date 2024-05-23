@@ -38,7 +38,7 @@ header {
     flex: 1; /* Neemt de resterende ruimte in beslag */
     overflow: auto; /* Voegt scroll toe indien nodig */
     padding: 20px;
-    padding-top: 200px;
+    padding-top: 100px;
     flex-grow: 1; /* Takes up all available space */
     margin-left: 200px; /* Space for the sidebar */
 }

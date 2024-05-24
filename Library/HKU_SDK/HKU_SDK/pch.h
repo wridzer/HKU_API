@@ -10,6 +10,7 @@
 // add headers that you want to pre-compile here
 #include "framework.h"
 #include <string>
+#include <atomic>
 
 #ifdef DLLPROJECT_EXPORTS
 #   define EXPORT __declspec(dllexport)
@@ -19,11 +20,12 @@
 
 char** project_ID;
 std::string currentUser;
+std::atomic<bool> pollingActive(false);
 
 extern "C" EXPORT void GetUsers(void (*callback)(char** users, int length, void* context), void* context = nullptr);
 extern "C" EXPORT void ConfigureProject(const char* project_ID, void(*callback)(bool IsSuccess, void* context), void* context = nullptr);
 extern "C" EXPORT void OpenLoginPage();
-extern "C" EXPORT void PollLoginStatus(void(*callback)(bool IsSucces, void* context), void* context);
+extern "C" EXPORT void StartPolling(void(*callback)(bool IsSuccess, void* context), void* context);
 extern "C" EXPORT void CancelPolling();
 extern "C" EXPORT void Logout(void (*callback)(bool IsSucces, void* context), void* context = nullptr);
 extern "C" EXPORT void GetUser(char** user_ID, void (*callback)(char** username, int length, void* context), void* context = nullptr);

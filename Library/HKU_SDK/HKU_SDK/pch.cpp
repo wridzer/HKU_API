@@ -10,6 +10,7 @@
 #include <curl/curl.h>
 #include <nlohmann/json.hpp>
 #include <unordered_set>
+#include "httplib.h"
 
 static size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* data) {
     size_t realSize = size * nmemb;
@@ -129,72 +130,45 @@ extern "C" void ConfigureProject(const char* project_ID, void(*callback)(bool Is
     }
 }
 
-void OpenLoginPage()
-{
-        const char* url = "https://localhost:5173/LoginUser";
+void OpenLoginPage() {
+    const char* url = "https://localhost:5173/LoginUser";
 #ifdef _WIN32
-        std::string command = "start " + std::string(url);
+    std::string command = "start " + std::string(url);
 #elif __APPLE__
-        std::string command = "open " + std::string(url);
+    std::string command = "open " + std::string(url);
 #elif __linux__
-        std::string command = "xdg-open " + std::string(url);
+    std::string command = "xdg-open " + std::string(url);
 #endif
-        system(command.c_str());
+    system(command.c_str());
 }
 
-std::atomic<bool> pollingActive(false);
-
-void PollLoginStatus(void(*callback)(bool IsSuccess, void* context), void* context)
-{
+void PollLoginStatus(void(*callback)(bool IsSuccess, void* context), void* context) {
     pollingActive.store(true);
-    CURL* curl;
-    CURLcode res;
-    std::string readBuffer;
+    httplib::Server svr;
 
-    curl = curl_easy_init();
-    if (curl) {
-        while (pollingActive.load()) {
-            readBuffer.clear();
-            curl_easy_setopt(curl, CURLOPT_URL, "https://localhost:5173/api/users/currentuser");
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
-
-            res = curl_easy_perform(curl);
-            if (res == CURLE_OK) {
-                try {
-                    auto responseJson = nlohmann::json::parse(readBuffer);
-                    std::cout << "Response JSON: " << responseJson.dump(4) << std::endl;
-
-                    if (!responseJson.is_null() && responseJson.contains("id")) {
-                        std::string currentUser = responseJson["id"].get<std::string>();
-                        std::cout << "User logged in with ID: " << currentUser << std::endl;
-                        callback(true, context);
-                        pollingActive.store(false);
-                        break;
-                    }
-                    else {
-                        std::cerr << "Response does not contain 'id'." << std::endl;
-                    }
-                }
-                catch (nlohmann::json::exception& e) {
-                    std::cerr << "JSON parsing error: " << e.what() << std::endl;
-                }
+    while (pollingActive.load()) {
+        svr.Get("/callback", [&](const httplib::Request& req, httplib::Response& res) {
+            if (req.has_param("status") && req.get_param_value("status") == "success") {
+                currentUser = req.get_param_value("user_id");
+                callback(true, context);
+                pollingActive.store(false);
+                svr.stop();
             }
-            else {
-                std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
-            }
+        res.set_content("Login status received. You can close this window.", "text/plain");
+            });
 
-            std::this_thread::sleep_for(std::chrono::seconds(3));
-        }
+        std::thread([&]() {
+            svr.listen("localhost", 8080);
+            }).detach();
 
-        curl_easy_cleanup(curl);
-    }
-    else {
-        std::cerr << "Failed to initialize CURL." << std::endl;
-        callback(false, context);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 }
 
+void StartPolling(void(*callback)(bool IsSuccess, void* context), void* context)
+{
+	std::thread(PollLoginStatus, callback, context).detach();
+}
 
 void CancelPolling() {
     pollingActive.store(false);

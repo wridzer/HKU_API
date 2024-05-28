@@ -131,7 +131,7 @@ extern "C" void ConfigureProject(const char* project_ID, void(*callback)(bool Is
 }
 
 void OpenLoginPage() {
-    const char* url = "https://localhost:5173/LoginUser";
+    const char* url = "https://localhost:5173/LoginUser?dll=true"; 
 #ifdef _WIN32
     std::string command = "start " + std::string(url);
 #elif __APPLE__
@@ -142,33 +142,44 @@ void OpenLoginPage() {
     system(command.c_str());
 }
 
-void PollLoginStatus(void(*callback)(bool IsSuccess, void* context), void* context) {
+void PollLoginStatus(void(*callback)(bool IsSuccess, const char* userId, void* context), void* context) {
     pollingActive.store(true);
     httplib::Server svr;
 
-    while (pollingActive.load()) {
-        svr.Get("/callback", [&](const httplib::Request& req, httplib::Response& res) {
-            if (req.has_param("status") && req.get_param_value("status") == "success") {
-                currentUser = req.get_param_value("user_id");
-                callback(true, context);
-                pollingActive.store(false);
-                svr.stop();
-            }
+    svr.Get("/callback", [&](const httplib::Request& req, httplib::Response& res) {
+        if (req.has_param("status") && req.get_param_value("status") == "success") {
+            std::string userId = req.get_param_value("user_id");
+            currentUser = userId;
+            callback(true, userId.c_str(), context);
+            pollingActive.store(false);
+            svr.stop();
+        }
         res.set_content("Login status received. You can close this window.", "text/plain");
-            });
+        });
 
-        std::thread([&]() {
-            svr.listen("localhost", 8080);
-            }).detach();
+    std::thread server_thread([&]() {
+        if (!svr.listen("localhost", 8080)) {
+            std::cerr << "Error starting server on port 8080" << std::endl;
+            pollingActive.store(false);
+            callback(false, nullptr, context);
+        }
+        });
 
+    // Wait until polling is complete
+    while (pollingActive.load()) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+
+    if (server_thread.joinable()) {
+        server_thread.join();
     }
 }
 
-void StartPolling(void(*callback)(bool IsSuccess, void* context), void* context)
+void StartPolling(void(*callback)(bool IsSuccess, const char* userId, void* context), void* context)
 {
-	std::thread(PollLoginStatus, callback, context).detach();
+    std::thread(PollLoginStatus, callback, context).detach();
 }
+
 
 void CancelPolling() {
     pollingActive.store(false);

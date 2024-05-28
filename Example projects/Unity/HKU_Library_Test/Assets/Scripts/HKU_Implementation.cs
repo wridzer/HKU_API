@@ -31,7 +31,7 @@ public class HKU_Implementation : MonoBehaviour
         // Poll login status
         gch = GCHandle.Alloc(this);
         IntPtr contextPtr = GCHandle.ToIntPtr(gch);
-        PollLoginStatus(myLoginStatusCallbackDelegate, contextPtr);
+        StartPolling(myLoginStatusCallbackDelegate, contextPtr);
     }
 
     private void Update()
@@ -69,11 +69,11 @@ public class HKU_Implementation : MonoBehaviour
         }
     }
 
-    public static void LoginStatusCallback(bool IsSuccess, IntPtr context)
+    public static void LoginStatusCallback(bool IsSuccess, string Id, IntPtr context)
     {
         if (IsSuccess)
         {
-            Debug.Log("Logged in");
+            Debug.Log("Logged in as user: " + Id);
             GCHandle gch = GCHandle.FromIntPtr(context);
             HKU_Implementation instance = (HKU_Implementation)gch.Target;
             instance.isLoggedin = true;

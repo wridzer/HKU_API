@@ -5,8 +5,7 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Load the system SQLite library using the custom provider
-CustomSQLitePCLRawProvider.Initialize();
+SQLitePCL.Batteries_V2.Init();
 
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())

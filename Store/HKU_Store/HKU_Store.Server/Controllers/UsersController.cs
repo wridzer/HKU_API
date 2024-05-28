@@ -122,7 +122,8 @@ public class UsersController : ControllerBase
             var result = await _signInManager.PasswordSignInAsync(user.UserName, model.Password, isPersistent: false, lockoutOnFailure: false);
             if (result.Succeeded)
             {
-                return Ok(); // Or return a relevant response
+                // Sla de huidige gebruiker op
+                return Ok(new { Status = "success", UserId = user.Id });
             }
             else
             {
@@ -131,6 +132,16 @@ public class UsersController : ControllerBase
             }
         }
         return BadRequest(ModelState);
+    }
+
+    [HttpGet("callback")]
+    public IActionResult Callback(string status, string user_id)
+    {
+        if (status == "success" && !string.IsNullOrEmpty(user_id))
+        {
+            return Ok(new { Status = "success", UserId = user_id });
+        }
+        return BadRequest("Invalid callback request.");
     }
 
     [HttpPost("logout")]

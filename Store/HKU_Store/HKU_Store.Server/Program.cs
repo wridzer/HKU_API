@@ -2,10 +2,9 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
+using System.Data.SQLite;
 
 var builder = WebApplication.CreateBuilder(args);
-
-SQLitePCL.Batteries_V2.Init();
 
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
@@ -28,10 +27,6 @@ Console.WriteLine($"Connection string found: {configConnectionString}");
 // Voeg de databasecontext toe met de connection string
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(configConnectionString));
-
-
-//builder.Services.AddDbContext<AppDbContext>(options =>
-//    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {

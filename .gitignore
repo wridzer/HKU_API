@@ -396,3 +396,4 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+Store/HKU_Store/hku_store.client/package-lock.json

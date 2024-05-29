@@ -185,7 +185,7 @@ void CancelPolling() {
     pollingActive.store(false);
 }
 
-void Logout(void(*callback)(bool IsSucces, void* context), void* context)
+void Logout(void(*callback)(bool IsSuccess, void* context), void* context)
 {
 	CURL* curl;
 	CURLcode res;
@@ -224,7 +224,7 @@ void Logout(void(*callback)(bool IsSucces, void* context), void* context)
 	}
 }
 
-void GetUser(char** user_ID, void(*callback)(char** username, int length, void* context), void* context)
+void GetUser(char* user_ID, void(*callback)(char** username, int length, void* context), void* context)
 {
 	CURL* curl;
 	CURLcode res;
@@ -232,7 +232,7 @@ void GetUser(char** user_ID, void(*callback)(char** username, int length, void* 
 	std::string readBuffer; // Buffer to hold response data
 
 	// URL construction
-	std::string url = "https://localhost:5173/api/users/" + std::string(*user_ID);
+	std::string url = "https://localhost:5173/api/users/" + std::string(user_ID);
 
 	curl = curl_easy_init();
 	if (curl) {
@@ -271,7 +271,171 @@ void GetUser(char** user_ID, void(*callback)(char** username, int length, void* 
 	}
 }
 
-void UploadLeaderboardScore(char** leaderboard, int score, void(*callback)(bool IsSucces, int currentRank, void* context), void* context)
+void GetLeaderboard(char* leaderboard_Id, char**& outArray, int amount, GetEntryOptions option, void (*callback)(bool IsSuccess, void* context), void* context)
+{
+    CURL* curl;
+    CURLcode res;
+    std::string readBuffer;
+
+    std::string url = "https://localhost:5173/api/leaderboards/entries/" + std::string(leaderboard_Id) + "?amount=" + std::to_string(amount);
+
+    switch (option) {
+    case GetEntryOptions::Highest:
+        url += "&option=Highest";
+        break;
+    case GetEntryOptions::AroundMe:
+        if (currentUser.empty()) {
+            std::cerr << "Current user is not set for AroundMe option." << std::endl;
+            callback(false, context);
+            return;
+        }
+        url += "&option=AroundMe&playerId=" + currentUser;
+        break;
+    case GetEntryOptions::AtRank:
+        url += "&option=AtRank";
+        break;
+    case GetEntryOptions::Friends:
+        url += "&option=Friends";
+        break;
+    default:
+        std::cerr << "Invalid option provided." << std::endl;
+        callback(false, context);
+        return;
+    }
+
+    curl = curl_easy_init();
+    if (curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+
+        res = curl_easy_perform(curl);
+        if (res != CURLE_OK) {
+            std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+            callback(false, context);
+            curl_easy_cleanup(curl);
+            return;
+        }
+
+        try {
+            auto responseJson = nlohmann::json::parse(readBuffer);
+            if (responseJson.is_null()) {
+                std::cerr << "No entries found." << std::endl;
+                callback(false, context);
+                curl_easy_cleanup(curl);
+                return;
+            }
+
+            int numberOfEntries = responseJson.size();
+            outArray = new char* [numberOfEntries * 3];
+
+            int i = 0;
+            for (const auto& entry : responseJson) {
+                if (!entry["PlayerID"].is_string() || !entry["Score"].is_number() || !entry["Rank"].is_number()) {
+                    std::cerr << "Invalid data at index " << i / 3 << std::endl;
+                    outArray[i] = nullptr;
+                    outArray[i + 1] = nullptr;
+                    outArray[i + 2] = nullptr;
+                    continue;
+                }
+
+                std::string playerId = entry["PlayerID"];
+                std::string score = std::to_string(entry["Score"].get<int>());
+                std::string rank = std::to_string(entry["Rank"].get<int>());
+
+                outArray[i] = new char[playerId.length() + 1];
+                strcpy_s(outArray[i], playerId.length() + 1, playerId.c_str());
+
+                outArray[i + 1] = new char[score.length() + 1];
+                strcpy_s(outArray[i + 1], score.length() + 1, score.c_str());
+
+                outArray[i + 2] = new char[rank.length() + 1];
+                strcpy_s(outArray[i + 2], rank.length() + 1, rank.c_str());
+
+                i += 3;
+            }
+
+            callback(true, context);
+        }
+        catch (nlohmann::json::exception& e) {
+            std::cerr << "JSON parsing error: " << e.what() << std::endl;
+            callback(false, context);
+        }
+
+        curl_easy_cleanup(curl);
+    }
+    else {
+        std::cerr << "Failed to initialize CURL." << std::endl;
+        callback(false, context);
+    }
+}
+
+
+
+void GetLeaderboardsForProject(char**& outArray, void(*callback)(bool IsSuccess, void* context), void* context)
+{
+    CURL* curl;
+    CURLcode res;
+    std::string readBuffer;
+
+    curl = curl_easy_init();
+    if (curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, "https://localhost:5173/api/leaderboards/by-project/" + std::string(*project_ID));
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+
+        res = curl_easy_perform(curl);
+        if (res != CURLE_OK) {
+            std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+            callback(false, context);
+            curl_easy_cleanup(curl);
+            return;
+        }
+
+        try {
+            auto responseJson = nlohmann::json::parse(readBuffer);
+            if (responseJson.is_null()) {
+                std::cerr << "No leaderboards found." << std::endl;
+                callback(false, context);
+                curl_easy_cleanup(curl);
+                return;
+            }
+
+            int numberOfLeaderboards = responseJson.size();
+            outArray = new char* [numberOfLeaderboards];
+
+            int i = 0;
+            for (const auto& leaderboard : responseJson) {
+                if (!leaderboard["leaderboardId"].is_string()) {
+                    std::cerr << "Leaderboard ID is not a string at index " << i << std::endl;
+                    outArray[i] = nullptr; // Use nullptr to indicate that fetching failed
+                    continue;
+                }
+
+                std::string leaderboardId = leaderboard["leaderboardId"];
+                outArray[i] = new char[leaderboardId.length() + 1];
+                strcpy_s(outArray[i], leaderboardId.length() + 1, leaderboardId.c_str());
+                std::cout << "Leaderboard ID " << i << ": " << outArray[i] << std::endl; // Debugging informatie
+                i++;
+            }
+
+            callback(true, context);
+        }
+        catch (nlohmann::json::exception& e) {
+            std::cerr << "JSON parsing error: " << e.what() << std::endl;
+            callback(false, context);
+        }
+
+        curl_easy_cleanup(curl);
+    }
+    else {
+        std::cerr << "Failed to initialize CURL." << std::endl;
+        callback(false, context);
+    }
+}
+
+
+void UploadLeaderboardScore(char* leaderboard, int score, void(*callback)(bool IsSuccess, int currentRank, void* context), void* context)
 {
     CURL* curl;
     CURLcode res;
@@ -286,7 +450,7 @@ void UploadLeaderboardScore(char** leaderboard, int score, void(*callback)(bool 
     std::string jsonData = dataJson.dump();
 
     // URL construction
-    std::string url = "https://localhost:5173/api/leaderboards/addentry/" + std::string(*leaderboard);
+    std::string url = "https://localhost:5173/api/leaderboards/addentry/" + std::string(leaderboard);
 
     curl = curl_easy_init();
     if (curl) {
@@ -324,3 +488,9 @@ void UploadLeaderboardScore(char** leaderboard, int score, void(*callback)(bool 
     }
 }
 
+extern "C" void FreeMemory(void* ptr)
+{
+    if (ptr) {
+        delete[] ptr;
+    }
+}

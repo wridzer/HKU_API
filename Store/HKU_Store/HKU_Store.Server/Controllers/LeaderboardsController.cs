@@ -115,12 +115,56 @@ public class LeaderboardsController : ControllerBase
         return Ok($"Leaderboard {tableName} deleted successfully.");
     }
 
-    // Get entries - Updated for correct fetching
+    public enum GetEntryOptions
+    {
+        Highest,
+        AroundMe,
+        AtRank,
+        Friends
+    }
+
     [HttpGet("entries/{leaderboardId}")]
-    public async Task<IActionResult> GetEntries(string leaderboardId)
+    public async Task<IActionResult> GetEntries(string leaderboardId, [FromQuery] int amount = 10, [FromQuery] GetEntryOptions option = GetEntryOptions.Highest, [FromQuery] string playerId = null)
     {
         string tableName = $"Leaderboard_{leaderboardId}";
-        string sql = $"SELECT * FROM {tableName}";
+        string sql;
+
+        switch (option)
+        {
+            case GetEntryOptions.Highest:
+                sql = $"SELECT * FROM {tableName} ORDER BY Score DESC LIMIT {amount}";
+                break;
+            case GetEntryOptions.AroundMe:
+                if (string.IsNullOrEmpty(playerId))
+                    return BadRequest("Player ID is required for AroundMe option.");
+
+                sql = $"SELECT Score FROM {tableName} WHERE PlayerID = '{playerId}'";
+                int playerScore;
+                using (var command = _context.Database.GetDbConnection().CreateCommand())
+                {
+                    command.CommandText = sql;
+                    _context.Database.OpenConnection();
+                    var result = await command.ExecuteScalarAsync();
+                    if (result == null)
+                        return NotFound("Player not found.");
+                    playerScore = Convert.ToInt32(result);
+                }
+
+                sql = $@"
+                (SELECT * FROM {tableName} WHERE Score > {playerScore} ORDER BY Score ASC LIMIT {amount / 2})
+                UNION
+                (SELECT * FROM {tableName} WHERE Score <= {playerScore} ORDER BY Score DESC LIMIT {amount / 2})
+                ORDER BY Score DESC";
+                break;
+            case GetEntryOptions.AtRank:
+                if (amount < 1)
+                    return BadRequest("Amount must be at least 1 for AtRank option.");
+
+                sql = $"SELECT * FROM {tableName} ORDER BY Score DESC LIMIT {amount - 1}, 1";
+                break;
+            default:
+                return BadRequest("Invalid option.");
+        }
 
         using (var command = _context.Database.GetDbConnection().CreateCommand())
         {
@@ -134,13 +178,14 @@ public class LeaderboardsController : ControllerBase
                     entries.Add(new AppLeaderboard
                     {
                         PlayerID = result.GetString(result.GetOrdinal("PlayerID")),
-                        Score = result.GetFloat(result.GetOrdinal("Score"))
+                        Score = result.GetInt32(result.GetOrdinal("Score"))
                     });
                 }
                 return Ok(entries);
             }
         }
     }
+
 
     [HttpGet("by-project/{projectId}")]
     public async Task<IActionResult> GetLeaderboardsByProject(string projectId)

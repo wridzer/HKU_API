@@ -41,7 +41,7 @@ builder.WebHost.ConfigureKestrel(options =>
 {
     options.ListenLocalhost(5037, listenOptions =>
     {
-        listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
+        listenOptions.Protocols = HttpProtocols.Http1;
     });
     options.ListenLocalhost(5038, listenOptions =>
     {

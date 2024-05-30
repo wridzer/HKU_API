@@ -1,19 +1,22 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 public class AppDbContext : IdentityDbContext<ApplicationUser>
 {
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        // Model configuratie
 
-        modelBuilder.Entity<ProjectContributor>()
-            .HasKey(pc => new { pc.ProjectId, pc.Contributor });
+        var splitStringConverter = new ValueConverter<List<string>, string>(
+            v => string.Join(";", v),
+            v => v.Split(new[] { ';' }).ToList());
 
-        modelBuilder.Entity<ProjectContributor>()
-            .HasOne(pc => pc.Project)
-            .WithMany(p => p.Contributors)
-            .HasForeignKey(pc => pc.ProjectId);
+        modelBuilder.Entity<ApplicationProject>()
+            .Property(e => e.Contributors)
+            .HasConversion(splitStringConverter);
     }
 
     public AppDbContext(DbContextOptions<AppDbContext> options)
@@ -24,5 +27,11 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ApplicationUser> AppUsers { get; set; }
     public DbSet<ApplicationProject> AppProjects { get; set; }
     public DbSet<AppLeaderboardInfo> AppLeaderboardsInfo { get; set; }
-    public DbSet<ProjectContributor> ProjectContributors { get; set; }
+
+    // Method to execute SQL Commands for dynamic tables
+    public async Task ExecuteSqlCommand(string sql)
+    {
+        await Database.ExecuteSqlRawAsync(sql);
+    }
+
 }

@@ -39,18 +39,18 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
     .AddDefaultTokenProviders()
     .AddSignInManager<SignInManager<ApplicationUser>>();
 
-builder.WebHost.ConfigureKestrel(options =>
-{
-    options.ListenLocalhost(5037, listenOptions =>
-    {
-        listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
-    });
-    options.ListenLocalhost(5038, listenOptions =>
-    {
-        listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
-        listenOptions.UseHttps();
-    });
-});
+//builder.WebHost.ConfigureKestrel(options =>
+//{
+//    options.ListenLocalhost(5037, listenOptions =>
+//    {
+//        listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
+//    });
+//    options.ListenLocalhost(5038, listenOptions =>
+//    {
+//        listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
+//        listenOptions.UseHttps();
+//    });
+//});
 
 builder.Services.AddControllersWithViews();
 

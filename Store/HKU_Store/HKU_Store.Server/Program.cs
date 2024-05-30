@@ -39,7 +39,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
 
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.ListenAnyIP(5037, listenOptions =>
+    options.ListenLocalhost(5037, listenOptions =>
     {
         listenOptions.Protocols = HttpProtocols.Http1;
     });

@@ -397,3 +397,4 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 Store/HKU_Store/hku_store.client/package-lock.json
+Store/HKU_Store/HKU_Store.Server/waterdampTest.db

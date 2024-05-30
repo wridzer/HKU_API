@@ -26,7 +26,7 @@ void GetUsers(void (*callback)(char** users, int length, void* context), void* c
     std::string readBuffer;
 
     if (curl) {
-        curl_easy_setopt(curl, CURLOPT_URL, "https://localhost:5173/api/users");
+        curl_easy_setopt(curl, CURLOPT_URL, "http://pong.hku.nl:5037/api/users");
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
         CURLcode res = curl_easy_perform(curl);
@@ -85,7 +85,7 @@ extern "C" void ConfigureProject(const char* project_ID, void(*callback)(bool Is
     std::string readBuffer;
 
     // URL to fetch the project by ID
-    std::string checkUrl = "https://localhost:5173/api/projects/" + std::string(project_ID);
+    std::string checkUrl = "http://pong.hku.nl:5037/api/projects/" + std::string(project_ID);
 
     curl = curl_easy_init();
     if (curl) {
@@ -131,7 +131,7 @@ extern "C" void ConfigureProject(const char* project_ID, void(*callback)(bool Is
 }
 
 void OpenLoginPage() {
-    const char* url = "https://localhost:5173/LoginUser?dll=true"; 
+    const char* url = "http://pong.hku.nl:5037/LoginUser?dll=true"; 
 #ifdef _WIN32
     std::string command = "start " + std::string(url);
 #elif __APPLE__
@@ -180,7 +180,6 @@ void StartPolling(void(*callback)(bool IsSuccess, const char* userId, void* cont
     std::thread(PollLoginStatus, callback, context).detach();
 }
 
-
 void CancelPolling() {
     pollingActive.store(false);
 }
@@ -194,7 +193,7 @@ void Logout(void(*callback)(bool IsSucces, void* context), void* context)
 
 	curl = curl_easy_init();
 	if (curl) {
-		curl_easy_setopt(curl, CURLOPT_URL, "https://localhost:5173/api/users/logout");
+		curl_easy_setopt(curl, CURLOPT_URL, "http://pong.hku.nl:5037/api/users/logout");
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
 
@@ -232,7 +231,7 @@ void GetUser(char** user_ID, void(*callback)(char** username, int length, void* 
 	std::string readBuffer; // Buffer to hold response data
 
 	// URL construction
-	std::string url = "https://localhost:5173/api/users/" + std::string(*user_ID);
+	std::string url = "http://pong.hku.nl:5037/api/users/" + std::string(*user_ID);
 
 	curl = curl_easy_init();
 	if (curl) {
@@ -286,7 +285,7 @@ void UploadLeaderboardScore(char** leaderboard, int score, void(*callback)(bool 
     std::string jsonData = dataJson.dump();
 
     // URL construction
-    std::string url = "https://localhost:5173/api/leaderboards/addentry/" + std::string(*leaderboard);
+    std::string url = "http://pong.hku.nl:5037/api/leaderboards/addentry/" + std::string(*leaderboard);
 
     curl = curl_easy_init();
     if (curl) {
@@ -323,4 +322,3 @@ void UploadLeaderboardScore(char** leaderboard, int score, void(*callback)(bool 
         callback(false, -1, context);
     }
 }
-

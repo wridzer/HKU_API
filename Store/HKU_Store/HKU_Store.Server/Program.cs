@@ -25,7 +25,6 @@ if (string.IsNullOrEmpty(configConnectionString))
 }
 Console.WriteLine($"Connection string found: {configConnectionString}");
 
-// Voeg de databasecontext toe met de connection string
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(configConnectionString));
 
@@ -40,18 +39,18 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
     .AddDefaultTokenProviders()
     .AddSignInManager<SignInManager<ApplicationUser>>();
 
-//builder.WebHost.ConfigureKestrel(options =>
-//{
-//    options.ListenLocalhost(5037, listenOptions =>
-//    {
-//        listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
-//    });
-//    options.ListenLocalhost(5038, listenOptions =>
-//    {
-//        listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
-//        listenOptions.UseHttps();
-//    });
-//});
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenLocalhost(5037, listenOptions =>
+    {
+        listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
+    });
+    options.ListenLocalhost(5038, listenOptions =>
+    {
+        listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
+        listenOptions.UseHttps();
+    });
+});
 
 builder.Services.AddControllersWithViews();
 
@@ -85,14 +84,13 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+//app.MapControllerRoute(
+//    name: "default",
+//    pattern: "{controller=Home}/{action=Index}/{id?}");
 
-//app.UseEndpoints(endpoints =>
-//{
-//    endpoints.MapControllers(); // For API routes
-//    endpoints.MapFallbackToFile("index.html");
-//});
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers(); // For API routes
+});
 
 app.Run();

@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,7 +6,14 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        // Model configuratie
+
+        modelBuilder.Entity<ProjectContributor>()
+            .HasKey(pc => new { pc.ProjectId, pc.Contributor });
+
+        modelBuilder.Entity<ProjectContributor>()
+            .HasOne(pc => pc.Project)
+            .WithMany(p => p.Contributors)
+            .HasForeignKey(pc => pc.ProjectId);
     }
 
     public AppDbContext(DbContextOptions<AppDbContext> options)
@@ -18,11 +24,5 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ApplicationUser> AppUsers { get; set; }
     public DbSet<ApplicationProject> AppProjects { get; set; }
     public DbSet<AppLeaderboardInfo> AppLeaderboardsInfo { get; set; }
-
-    // Method to execute SQL Commands for dynamic tables
-    public async Task ExecuteSqlCommand(string sql)
-    {
-        await Database.ExecuteSqlRawAsync(sql);
-    }
-
+    public DbSet<ProjectContributor> ProjectContributors { get; set; }
 }

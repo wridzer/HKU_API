@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using System.Data.SQLite;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +40,21 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
     .AddDefaultTokenProviders()
     .AddSignInManager<SignInManager<ApplicationUser>>();
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenLocalhost(5037, listenOptions =>
+    {
+        listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
+    });
+    options.ListenLocalhost(5038, listenOptions =>
+    {
+        listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
+        listenOptions.UseHttps();
+    });
+});
+
+builder.Services.AddControllersWithViews();
+
 var app = builder.Build();
 
 app.UseHttpsRedirection();
@@ -69,10 +85,14 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllers(); // For API routes
-    endpoints.MapFallbackToFile("index.html");
-});
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+//app.UseEndpoints(endpoints =>
+//{
+//    endpoints.MapControllers(); // For API routes
+//    endpoints.MapFallbackToFile("index.html");
+//});
 
 app.Run();

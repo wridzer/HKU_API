@@ -42,6 +42,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
 var app = builder.Build();
 
 app.UseHttpsRedirection();
+app.UseHsts();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 

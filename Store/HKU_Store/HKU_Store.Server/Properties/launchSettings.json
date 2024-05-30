@@ -3,12 +3,13 @@
     "http": {
       "commandName": "Project",
       "launchBrowser": true,
+      "externalUrlConfiguration": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_HOSTINGSTARTUPASSEMBLIES": "Microsoft.AspNetCore.SpaProxy"
       },
       "dotnetRunMessages": true,
-      "applicationUrl": "http://[::]:5037"
+      "applicationUrl": "http://localhost:5037"
     },
     "IIS Express": {
       "commandName": "IISExpress",

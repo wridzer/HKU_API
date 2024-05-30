@@ -77,12 +77,13 @@ app.UseExceptionHandler("/Error");
 
 app.UseRouting();
 
-app.UseAuthentication();
-app.UseAuthorization();
-
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers(); // For API routes
+    endpoints.MapFallbackToFile("index.html"); // Fallback route for SPA
 });
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.Run();

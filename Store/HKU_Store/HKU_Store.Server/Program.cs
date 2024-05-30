@@ -37,6 +37,14 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
     .AddDefaultTokenProviders()
     .AddSignInManager<SignInManager<ApplicationUser>>();
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenLocalhost(5037, listenOptions =>
+    {
+        listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
+    });
+});
+
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();

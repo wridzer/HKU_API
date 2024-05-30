@@ -43,6 +43,7 @@ var app = builder.Build();
 
 app.UseHttpsRedirection();
 app.UseHsts();
+
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
@@ -62,8 +63,6 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 });
 
 app.UseExceptionHandler("/Error");
-// The HSTS middleware
-app.UseHsts();
 
 app.UseRouting();
 
@@ -73,6 +72,7 @@ app.UseAuthorization();
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers(); // For API routes
+    endpoints.MapFallbackToFile("index.html");
 });
 
 app.Run();

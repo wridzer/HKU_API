@@ -19,6 +19,9 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import axios from 'axios';
+    import { useRouter } from 'vue-router'
+
+    const router = useRouter();
 
     export default defineComponent({
         data() {
@@ -37,6 +40,7 @@
                     });
 
                     if (response.data.status === 'success') {
+                        alert('Login successful!');
                         const userId = response.data.userId;
                         // Check if the DLL callback is needed
                         const urlParams = new URLSearchParams(window.location.search);
@@ -44,7 +48,7 @@
                             window.location.href = `http://localhost:8080/callback?status=success&user_id=${userId}`;
                         } else {
                             // Normal login process
-                            window.location.href = '/';
+                            router.push('/');
                         }
                     } else {
                         this.error = 'Invalid login attempt.';

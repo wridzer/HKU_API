@@ -16,52 +16,52 @@
     </div>
 </template>
 
-<script lang="ts">
-    import { defineComponent } from 'vue';
+<script setup>
+    import { ref } from 'vue';
     import axios from 'axios';
     import { useRouter } from 'vue-router'
 
+    const email = ref('');
+    const password = ref('');
     const router = useRouter();
 
-    export default defineComponent({
-        data() {
-            return {
-                email: '',
-                password: '',
-                error: ''
-            };
-        },
-        methods: {
-            async login() {
-                alert('Login attempt!');
-                try {
-                    alert('Login send!');
-                    const response = await axios.post('/api/users/login', {
-                        email: this.email,
-                        password: this.password
-                    });
+    const login = async () => {
+        try {
+            const response = await axios.post('/api/users/login', {
+                email: email.value,
+                password: password.value,
+            });
 
-                    alert('Login done!');
-                    if (response.data.status === 'success') {
-                        alert('Login successful!');
-                        const userId = response.data.userId;
-                        // Check if the DLL callback is needed
-                        const urlParams = new URLSearchParams(window.location.search);
-                        if (urlParams.has('dll') && urlParams.get('dll') === 'true') {
-                            window.location.href = `http://localhost:8080/callback?status=success&user_id=${userId}`;
-                        } else {
-                            // Normal login process
-                            router.push('/');
-                        }
-                    } else {
-                        this.error = 'Invalid login attempt.';
-                    }
-                } catch (err) {
-                    this.error = 'An error occurred during login. ' + err;
+            if (response.data.status === 'success') {
+                alert('Login successful!');
+                const userId = response.data.userId;
+                // Check if the DLL callback is needed
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('dll') && urlParams.get('dll') === 'true') {
+                    window.location.href = `http://localhost:8080/callback?status=success&user_id=${userId}`;
+                } else {
+                    // Normal login process
+                    router.push('/');
                 }
+            } else {
+                this.error = 'Invalid login attempt.';
             }
+        } catch (error) {
+            console.error(error);
+            let errorMessage = 'Login failed: ';
+
+            if (error.response && error.response.data) {
+                const errors = error.response.data;
+                Object.keys(errors).forEach(key => {
+                    errors[key].forEach(msg => errorMessage += msg + ' ');
+                });
+            } else {
+                errorMessage += 'Unknown error';
+            }
+
+            alert(errorMessage.trim());
         }
-    });
+    };
 </script>
 
 

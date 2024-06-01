@@ -51,11 +51,11 @@ export default defineConfig({
                 secure: false
             },
             '^/api/': {
-                target,
+                target: "http://localhost:5037",
                 changeOrigin: true,
                 secure: false
             }
         },
-        port: 5037,
+        port: 5040,
     }
 })

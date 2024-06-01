@@ -122,6 +122,7 @@ public class UsersController : ControllerBase
             var result = await _signInManager.PasswordSignInAsync(user.UserName, model.Password, isPersistent: false, lockoutOnFailure: false);
             if (result.Succeeded)
             {
+                
                 // Sla de huidige gebruiker op
                 return Ok(new { Status = "success", UserId = user.Id });
             }

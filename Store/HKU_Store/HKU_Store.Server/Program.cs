@@ -39,14 +39,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
 
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.ListenAnyIP(5037, listenOptions =>
-    {
-        listenOptions.Protocols = HttpProtocols.Http1;
-    });
-    options.ListenAnyIP(5038, listenOptions =>
-    {
-        listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
-    });
+    options.Configure(builder.Configuration.GetSection("Kestrel"));
 });
 
 builder.Services.AddControllersWithViews();

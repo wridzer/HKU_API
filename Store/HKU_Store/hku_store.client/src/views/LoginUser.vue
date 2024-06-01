@@ -33,12 +33,15 @@
         },
         methods: {
             async login() {
+                alert('Login attempt!');
                 try {
+                    alert('Login send!');
                     const response = await axios.post('/api/users/login', {
                         email: this.email,
                         password: this.password
                     });
 
+                    alert('Login done!');
                     if (response.data.status === 'success') {
                         alert('Login successful!');
                         const userId = response.data.userId;
@@ -54,7 +57,7 @@
                         this.error = 'Invalid login attempt.';
                     }
                 } catch (err) {
-                    this.error = 'An error occurred during login.';
+                    this.error = 'An error occurred during login. ' + err;
                 }
             }
         }

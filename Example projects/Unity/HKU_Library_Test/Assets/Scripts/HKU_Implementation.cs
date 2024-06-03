@@ -15,6 +15,7 @@ public class HKU_Implementation
     private LogoutCallbackDelegate myLogoutCallbackDelegate;
     private LeaderboardCallbackDelegate myGetLeaderboardCallbackDelegate;
     private GetLeaderboardsForProjectCallbackDelegate myGetLeaderboardsForProjectCallbackDelegate;
+    private DebugOutputDelegate myDebugOutputDelegate;
 
     private GCHandle gch;
     private IntPtr contextPtr = IntPtr.Zero;
@@ -27,6 +28,10 @@ public class HKU_Implementation
 
     public void Initialize()
     {
+        // Register debug output
+        myDebugOutputDelegate = SetOutputDebugCallback;
+        SetOutputCallback(myDebugOutputDelegate, IntPtr.Zero);
+
         // Register project
         myConfigureProjectCallbackDelegate = ConfigureProjectCallback;
         ConfigureProject(projectID, myConfigureProjectCallbackDelegate, IntPtr.Zero);
@@ -74,7 +79,7 @@ public class HKU_Implementation
                 callback(null);
             }
         };
-        GetLeaderboardsForProject(myGetLeaderboardsForProjectCallbackDelegate, contextPtr);
+        GetLeaderboardsForProject(ref outArrayPtr, myGetLeaderboardsForProjectCallbackDelegate, contextPtr);
     }
 
     public void GetLeaderboardEntries(string leaderboard, int amount, GetEntryOptions option, Action<HKU.LeaderboardEntry[]> callback)
@@ -232,6 +237,11 @@ public class HKU_Implementation
         {
             Debug.LogError("Failed to fetch leaderboard entries.");
         }
+    }
+
+    public static void SetOutputDebugCallback(string message, IntPtr context)
+    {
+        Debug.Log(message);
     }
 
     // Destroy

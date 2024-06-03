@@ -41,9 +41,11 @@ namespace HKU
         [DllImport("HKU_SDK", CallingConvention = CallingConvention.Cdecl)]
         public static extern void GetLeaderboard(char[] leaderboard_Id, ref IntPtr outArray, int amount, GetEntryOptions option, LeaderboardCallbackDelegate callback, IntPtr context);
         [DllImport("HKU_SDK", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void GetLeaderboardsForProject(GetLeaderboardsForProjectCallbackDelegate callback, IntPtr context);
+        public static extern void GetLeaderboardsForProject(ref IntPtr outArray, GetLeaderboardsForProjectCallbackDelegate callback, IntPtr context);
         [DllImport("HKU_SDK", CallingConvention = CallingConvention.Cdecl)]
         public static extern void FreeMemory(IntPtr ptr);
+        [DllImport("HKU_SDK", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void SetOutputCallback(DebugOutputDelegate callback, IntPtr context);
 
         // General Callbacks
         public delegate void UsersCallbackDelegate(IntPtr users, int length, IntPtr context);
@@ -58,5 +60,8 @@ namespace HKU
         public delegate void UploadLeaderboardScoreCallbackDelegate(bool IsSucces, int currentRank, IntPtr context);
         public delegate void LeaderboardCallbackDelegate(bool isSuccess, IntPtr context);
         public delegate void GetLeaderboardsForProjectCallbackDelegate(bool isSuccess, IntPtr context);
+
+        // Debug
+        public delegate void DebugOutputDelegate(string message, IntPtr context);
     }
 }

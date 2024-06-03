@@ -12,7 +12,7 @@
 #   define EXPORT __declspec(dllimport)
 #endif
 
-char** project_ID;
+std::string projectID = std::string();
 std::string currentUser;
 std::atomic<bool> pollingActive(false);
 
@@ -34,5 +34,7 @@ extern "C" EXPORT void GetUser(char* user_ID, void (*callback)(char** username, 
 extern "C" EXPORT void GetLeaderboard(char* leaderboard_Id, char**& outArray, int amount, GetEntryOptions option, void (*callback)(bool IsSuccess, void* context), void* context = nullptr); extern "C" EXPORT void GetLeaderboardsForProject(char** &outArray, void (*callback)(bool IsSuccess, void* context), void* context = nullptr);
 extern "C" EXPORT void GetLeaderboardsForProject(char**& outArray, void(*callback)(bool IsSuccess, void* context), void* context);
 extern "C" EXPORT void UploadLeaderboardScore(char* leaderboard, int score, void (*callback)(bool IsSuccess, int currentRank, void* context), void* context = nullptr);
+extern "C" EXPORT void SetOutputCallback(void (*callback)(const char* message, void* context), void* context = nullptr);
+void SendMessageToCallback(const char* format, ...);
 
 #endif //PCH_H

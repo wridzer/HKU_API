@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,11 +36,6 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
     .AddDefaultTokenProviders()
     .AddSignInManager<SignInManager<ApplicationUser>>();
 
-builder.WebHost.ConfigureKestrel(options =>
-{
-    options.Configure(builder.Configuration.GetSection("Kestrel"));
-});
-
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
@@ -70,13 +64,13 @@ app.UseExceptionHandler("/Error");
 
 app.UseRouting();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers(); // For API routes
     endpoints.MapFallbackToFile("index.html"); // Fallback route for SPA
 });
-
-app.UseAuthentication();
-app.UseAuthorization();
 
 app.Run();

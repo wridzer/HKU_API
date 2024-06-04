@@ -120,6 +120,12 @@ public class LeaderboardsController : ControllerBase
         AtRank,
         Friends
     }
+    public struct LeaderboardEntry
+    {
+        public string PlayerID { get; set; }
+        public int Score { get; set; }
+        public int Rank { get; set; }
+    }
 
     [HttpGet("entries/{leaderboardId}")]
     public async Task<IActionResult> GetEntries(string leaderboardId, [FromQuery] int amount = 10, [FromQuery] GetEntryOptions option = GetEntryOptions.Highest, [FromQuery] string playerId = null)
@@ -127,17 +133,37 @@ public class LeaderboardsController : ControllerBase
         string tableName = $"\"Leaderboard_{leaderboardId}\""; // Properly quote the table name
         string sql;
         int playerScore = 0;
-        int playerRank = -1; // Default value if player rank is not applicable
+        List<LeaderboardEntry> entries = new List<LeaderboardEntry>();
 
         switch (option)
         {
             case GetEntryOptions.Highest:
-                sql = $"SELECT * FROM {tableName} ORDER BY Score DESC LIMIT @amount";
+                sql = $"SELECT PlayerID, Score FROM {tableName} ORDER BY Score DESC LIMIT @amount";
+                using (var command = _context.Database.GetDbConnection().CreateCommand())
+                {
+                    command.CommandText = sql;
+                    command.Parameters.Add(new SqliteParameter("@amount", amount));
+                    _context.Database.OpenConnection();
+                    using (var result = await command.ExecuteReaderAsync())
+                    {
+                        int rank = 1;
+                        while (result.Read())
+                        {
+                            entries.Add(new LeaderboardEntry
+                            {
+                                PlayerID = result.GetString(result.GetOrdinal("PlayerID")),
+                                Score = result.GetInt32(result.GetOrdinal("Score")),
+                                Rank = rank++
+                            });
+                        }
+                    }
+                }
                 break;
             case GetEntryOptions.AroundMe:
                 if (string.IsNullOrEmpty(playerId))
                     return BadRequest("Player ID is required for AroundMe option.");
 
+                // Get player score
                 sql = $"SELECT Score FROM {tableName} WHERE PlayerID = @playerId";
                 using (var command = _context.Database.GetDbConnection().CreateCommand())
                 {
@@ -151,63 +177,62 @@ public class LeaderboardsController : ControllerBase
                 }
 
                 sql = $@"
-            (SELECT * FROM {tableName} WHERE Score > @playerScore ORDER BY Score ASC LIMIT @halfAmount)
+            (SELECT PlayerID, Score FROM {tableName} WHERE Score > @playerScore ORDER BY Score ASC LIMIT @halfAmount)
             UNION
-            (SELECT * FROM {tableName} WHERE Score <= @playerScore ORDER BY Score DESC LIMIT @halfAmount)
+            (SELECT PlayerID, Score FROM {tableName} WHERE Score <= @playerScore ORDER BY Score DESC LIMIT @halfAmount)
             ORDER BY Score DESC";
+                using (var command = _context.Database.GetDbConnection().CreateCommand())
+                {
+                    command.CommandText = sql;
+                    command.Parameters.Add(new SqliteParameter("@playerScore", playerScore));
+                    command.Parameters.Add(new SqliteParameter("@halfAmount", amount / 2));
+                    _context.Database.OpenConnection();
+                    using (var result = await command.ExecuteReaderAsync())
+                    {
+                        int rank = 1;
+                        while (result.Read())
+                        {
+                            entries.Add(new LeaderboardEntry
+                            {
+                                PlayerID = result.GetString(result.GetOrdinal("PlayerID")),
+                                Score = result.GetInt32(result.GetOrdinal("Score")),
+                                Rank = rank++
+                            });
+                        }
+                    }
+                }
                 break;
             case GetEntryOptions.AtRank:
                 if (amount < 1)
                     return BadRequest("Amount must be at least 1 for AtRank option.");
 
-                sql = $"SELECT * FROM {tableName} ORDER BY Score DESC LIMIT @offset, 1";
+                sql = $"SELECT PlayerID, Score FROM {tableName} ORDER BY Score DESC LIMIT @offset, 1";
+                using (var command = _context.Database.GetDbConnection().CreateCommand())
+                {
+                    command.CommandText = sql;
+                    command.Parameters.Add(new SqliteParameter("@offset", amount - 1));
+                    _context.Database.OpenConnection();
+                    using (var result = await command.ExecuteReaderAsync())
+                    {
+                        int rank = 1;
+                        while (result.Read())
+                        {
+                            entries.Add(new LeaderboardEntry
+                            {
+                                PlayerID = result.GetString(result.GetOrdinal("PlayerID")),
+                                Score = result.GetInt32(result.GetOrdinal("Score")),
+                                Rank = rank++
+                            });
+                        }
+                    }
+                }
                 break;
             default:
                 return BadRequest("Invalid option.");
         }
 
-        using (var command = _context.Database.GetDbConnection().CreateCommand())
-        {
-            command.CommandText = sql;
-            command.Parameters.Add(new SqliteParameter("@amount", amount));
-            if (option == GetEntryOptions.AroundMe)
-            {
-                command.Parameters.Add(new SqliteParameter("@playerScore", playerScore));
-                command.Parameters.Add(new SqliteParameter("@halfAmount", amount / 2));
-            }
-            else if (option == GetEntryOptions.AtRank)
-            {
-                command.Parameters.Add(new SqliteParameter("@offset", amount - 1));
-            }
-
-            _context.Database.OpenConnection();
-            using (var result = await command.ExecuteReaderAsync())
-            {
-                var entries = new List<AppLeaderboard>();
-                while (result.Read())
-                {
-                    entries.Add(new AppLeaderboard
-                    {
-                        PlayerID = result.GetString(result.GetOrdinal("PlayerID")),
-                        Score = result.GetInt32(result.GetOrdinal("Score"))
-                    });
-                }
-
-                if (!string.IsNullOrEmpty(playerId))
-                {
-                    // Get the rank of the specified player
-                    sql = $"SELECT COUNT(*) + 1 FROM {tableName} WHERE Score > @playerScore";
-                    command.CommandText = sql;
-                    command.Parameters.Clear();
-                    command.Parameters.Add(new SqliteParameter("@playerScore", playerScore));
-                    playerRank = Convert.ToInt32(await command.ExecuteScalarAsync());
-                }
-
-                return Ok(new { Entries = entries, PlayerRank = playerRank });
-            }
-        }
+        return Ok(new { entries });
     }
-
 
     [HttpGet("by-project/{projectId}")]
     public async Task<IActionResult> GetLeaderboardsByProject(string projectId)

@@ -7,9 +7,9 @@ namespace HKU
 
     public class LeaderboardEntry
     {
-        public string username;
-        public int score;
-        public int rank;
+        public string PlayerID { get; set; }
+        public int Score { get; set; }
+        public int Rank { get; set; }
     }
 
     public class HKUApiWrapper

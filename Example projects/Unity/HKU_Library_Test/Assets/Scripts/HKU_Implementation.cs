@@ -92,7 +92,7 @@ public class HKU_Implementation
                 // Parse outArrayPtr to LeaderboardEntry array and invoke the callback
                 HKU.LeaderboardEntry[] entries = MarshalPtrToLeaderboardEntryArray(outArrayPtr);
                 callback(entries);
-                ReleaseMemory(outArrayPtr); // Voeg dit toe om het geheugen vrij te geven
+                FreeMemory(outArrayPtr); // Free the memory
             }
             else
             {
@@ -132,7 +132,7 @@ public class HKU_Implementation
             count++;
         }
 
-        HKU.LeaderboardEntry[] result = new HKU.LeaderboardEntry[count / 3];
+        var result = new HKU.LeaderboardEntry[count / 3];
         for (int i = 0; i < count; i += 3)
         {
             IntPtr playerIdPtr = Marshal.ReadIntPtr(ptr, i * IntPtr.Size);
@@ -141,14 +141,15 @@ public class HKU_Implementation
 
             result[i / 3] = new HKU.LeaderboardEntry
             {
-                username = Marshal.PtrToStringAnsi(playerIdPtr),
-                score = int.Parse(Marshal.PtrToStringAnsi(scorePtr)),
-                rank = int.Parse(Marshal.PtrToStringAnsi(rankPtr))
+                PlayerID = Marshal.PtrToStringAnsi(playerIdPtr),
+                Score = int.Parse(Marshal.PtrToStringAnsi(scorePtr)),
+                Rank = int.Parse(Marshal.PtrToStringAnsi(rankPtr))
             };
         }
 
         return result;
     }
+
     private void ReleaseMemory(IntPtr ptr)
     {
         if (ptr != IntPtr.Zero)

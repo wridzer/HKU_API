@@ -131,9 +131,9 @@ public class MenuController : MonoBehaviour
             {
                 foreach (HKU.LeaderboardEntry entry in entries)
                 {
-                    Debug.Log($"Entry: {entry.rank} - {entry.username} - {entry.score}"); // Voeg debuginformatie toe
+                    Debug.Log($"Entry: {entry.Rank} - {entry.PlayerID} - {entry.Score}"); // Voeg debuginformatie toe
                     GameObject leaderboardEntry = Instantiate(LeaderboardEntryPrefab, LeaderboardSelectPanel.transform);
-                    leaderboardEntry.GetComponentInChildren<TMP_Text>().text = entry.rank + " - " + entry.username + " - " + entry.score;
+                    leaderboardEntry.GetComponentInChildren<TMP_Text>().text = entry.Rank + " - " + entry.PlayerID + " - " + entry.Score;
                 }
             }
             else

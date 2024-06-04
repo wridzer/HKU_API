@@ -276,8 +276,8 @@ void GetLeaderboard(char* leaderboard_Id, char**& outArray, int amount, GetEntry
     CURLcode res;
     std::string readBuffer;
 
-    std::string url = "https://pong.hku.nl:5037/api/leaderboards/entries/" + std::string(leaderboard_Id) + "?amount=" + std::to_string(amount);
-	SendMessageToCallback("Constructed URL: %s", url.c_str());
+    std::string url = "http://pong.hku.nl:5037/api/leaderboards/entries/" + std::string(leaderboard_Id) + "?amount=" + std::to_string(amount);
+    SendMessageToCallback("Constructed URL: %s", url.c_str());
 
     switch (option) {
     case GetEntryOptions::Highest:
@@ -327,12 +327,12 @@ void GetLeaderboard(char* leaderboard_Id, char**& outArray, int amount, GetEntry
             }
 
             int numberOfEntries = responseJson.size();
-            outArray = new char* [numberOfEntries * 3];
+            outArray = new char* [numberOfEntries * 3 + 1]; // Allocate extra space for null terminator
 
             int i = 0;
             for (const auto& entry : responseJson) {
                 if (!entry["PlayerID"].is_string() || !entry["Score"].is_number() || !entry["Rank"].is_number()) {
-                    SendMessageToCallback("Invalid data at index %s", i / 3);
+                    SendMessageToCallback("Invalid data at index %d", i / 3);
                     outArray[i] = nullptr;
                     outArray[i + 1] = nullptr;
                     outArray[i + 2] = nullptr;
@@ -354,7 +354,7 @@ void GetLeaderboard(char* leaderboard_Id, char**& outArray, int amount, GetEntry
 
                 i += 3;
             }
-			outArray[numberOfEntries * 3] = nullptr; // Null-terminate the array
+            outArray[numberOfEntries * 3] = nullptr; // Null-terminate the array
             callback(true, context);
         }
         catch (nlohmann::json::exception& e) {

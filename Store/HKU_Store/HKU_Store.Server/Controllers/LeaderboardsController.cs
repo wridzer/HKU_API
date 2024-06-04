@@ -127,6 +127,7 @@ public class LeaderboardsController : ControllerBase
         string tableName = $"\"Leaderboard_{leaderboardId}\""; // Properly quote the table name
         string sql;
         int playerScore = 0;
+        int playerRank = -1; // Default value if player rank is not applicable
 
         switch (option)
         {
@@ -191,10 +192,22 @@ public class LeaderboardsController : ControllerBase
                         Score = result.GetInt32(result.GetOrdinal("Score"))
                     });
                 }
-                return Ok(entries);
+
+                if (!string.IsNullOrEmpty(playerId))
+                {
+                    // Get the rank of the specified player
+                    sql = $"SELECT COUNT(*) + 1 FROM {tableName} WHERE Score > @playerScore";
+                    command.CommandText = sql;
+                    command.Parameters.Clear();
+                    command.Parameters.Add(new SqliteParameter("@playerScore", playerScore));
+                    playerRank = Convert.ToInt32(await command.ExecuteScalarAsync());
+                }
+
+                return Ok(new { Entries = entries, PlayerRank = playerRank });
             }
         }
     }
+
 
     [HttpGet("by-project/{projectId}")]
     public async Task<IActionResult> GetLeaderboardsByProject(string projectId)

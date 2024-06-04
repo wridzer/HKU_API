@@ -1,4 +1,4 @@
-﻿
+﻿using Microsoft.Data.Sqlite;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -76,8 +76,6 @@ public class LeaderboardsController : ControllerBase
         }
     }
 
-
-
     // Update leaderboard configuration
     [HttpPut("update/{leaderboardId}")]
     public async Task<IActionResult> UpdateLeaderboard(string leaderboardId, [FromBody] AppLeaderboardInfo updatedInfo)
@@ -126,23 +124,24 @@ public class LeaderboardsController : ControllerBase
     [HttpGet("entries/{leaderboardId}")]
     public async Task<IActionResult> GetEntries(string leaderboardId, [FromQuery] int amount = 10, [FromQuery] GetEntryOptions option = GetEntryOptions.Highest, [FromQuery] string playerId = null)
     {
-        string tableName = $"Leaderboard_{leaderboardId}";
+        string tableName = $"\"Leaderboard_{leaderboardId}\""; // Properly quote the table name
         string sql;
+        int playerScore = 0;
 
         switch (option)
         {
             case GetEntryOptions.Highest:
-                sql = $"SELECT * FROM {tableName} ORDER BY Score DESC LIMIT {amount}";
+                sql = $"SELECT * FROM {tableName} ORDER BY Score DESC LIMIT @amount";
                 break;
             case GetEntryOptions.AroundMe:
                 if (string.IsNullOrEmpty(playerId))
                     return BadRequest("Player ID is required for AroundMe option.");
 
-                sql = $"SELECT Score FROM {tableName} WHERE PlayerID = '{playerId}'";
-                int playerScore;
+                sql = $"SELECT Score FROM {tableName} WHERE PlayerID = @playerId";
                 using (var command = _context.Database.GetDbConnection().CreateCommand())
                 {
                     command.CommandText = sql;
+                    command.Parameters.Add(new SqliteParameter("@playerId", playerId));
                     _context.Database.OpenConnection();
                     var result = await command.ExecuteScalarAsync();
                     if (result == null)
@@ -151,16 +150,16 @@ public class LeaderboardsController : ControllerBase
                 }
 
                 sql = $@"
-                (SELECT * FROM {tableName} WHERE Score > {playerScore} ORDER BY Score ASC LIMIT {amount / 2})
-                UNION
-                (SELECT * FROM {tableName} WHERE Score <= {playerScore} ORDER BY Score DESC LIMIT {amount / 2})
-                ORDER BY Score DESC";
+            (SELECT * FROM {tableName} WHERE Score > @playerScore ORDER BY Score ASC LIMIT @halfAmount)
+            UNION
+            (SELECT * FROM {tableName} WHERE Score <= @playerScore ORDER BY Score DESC LIMIT @halfAmount)
+            ORDER BY Score DESC";
                 break;
             case GetEntryOptions.AtRank:
                 if (amount < 1)
                     return BadRequest("Amount must be at least 1 for AtRank option.");
 
-                sql = $"SELECT * FROM {tableName} ORDER BY Score DESC LIMIT {amount - 1}, 1";
+                sql = $"SELECT * FROM {tableName} ORDER BY Score DESC LIMIT @offset, 1";
                 break;
             default:
                 return BadRequest("Invalid option.");
@@ -169,6 +168,17 @@ public class LeaderboardsController : ControllerBase
         using (var command = _context.Database.GetDbConnection().CreateCommand())
         {
             command.CommandText = sql;
+            command.Parameters.Add(new SqliteParameter("@amount", amount));
+            if (option == GetEntryOptions.AroundMe)
+            {
+                command.Parameters.Add(new SqliteParameter("@playerScore", playerScore));
+                command.Parameters.Add(new SqliteParameter("@halfAmount", amount / 2));
+            }
+            else if (option == GetEntryOptions.AtRank)
+            {
+                command.Parameters.Add(new SqliteParameter("@offset", amount - 1));
+            }
+
             _context.Database.OpenConnection();
             using (var result = await command.ExecuteReaderAsync())
             {
@@ -185,7 +195,6 @@ public class LeaderboardsController : ControllerBase
             }
         }
     }
-
 
     [HttpGet("by-project/{projectId}")]
     public async Task<IActionResult> GetLeaderboardsByProject(string projectId)

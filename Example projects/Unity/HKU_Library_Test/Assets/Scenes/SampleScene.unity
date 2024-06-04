@@ -912,10 +912,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UserInfo: {fileID: 39430673}
   loginButtonText: {fileID: 1055721826}
-  mainMenu: {fileID: 781711022}
+  mainMenu: {fileID: 1891883653}
   LeaderboardMenu: {fileID: 2048293309}
-  LeaderboardEntryPrefab: {fileID: 0}
-  LeaderboardButtonPrefab: {fileID: 0}
+  LeaderboardEntryPrefab: {fileID: 8212377964799724985, guid: df70368117f810d48860bd40ecf59e36, type: 3}
+  LeaderboardButtonPrefab: {fileID: 1712490879067836868, guid: 1fa450fc35a9155438f8179b82a0e47f, type: 3}
+  LeaderboardSelectPanel: {fileID: 806290343}
   amountOfEntries: 10
 --- !u!1 &806290343
 GameObject:

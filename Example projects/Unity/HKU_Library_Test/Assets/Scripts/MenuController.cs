@@ -15,6 +15,7 @@ public class MenuController : MonoBehaviour
     [Header("Leaderboard")]
     [SerializeField] private GameObject LeaderboardEntryPrefab;
     [SerializeField] private GameObject LeaderboardButtonPrefab;
+    [SerializeField] private GameObject LeaderboardSelectPanel;
     [SerializeField] private int amountOfEntries = 10;
 
     private HKU_Implementation hku;
@@ -89,7 +90,7 @@ public class MenuController : MonoBehaviour
     private void PopulateLeaderboardButtons()
     {
         // Clear leaderboard buttons
-        foreach (Transform child in LeaderboardMenu.transform)
+        foreach (Transform child in LeaderboardSelectPanel.transform)
         {
             if (child.gameObject.tag == "LeaderboardObject")
             {
@@ -102,11 +103,11 @@ public class MenuController : MonoBehaviour
         {
             if (leaderboards != null)
             {
-                foreach (string leaderboard in leaderboards)
+                foreach (var leaderboard in leaderboards)
                 {
-                    GameObject leaderboardButton = Instantiate(LeaderboardButtonPrefab, LeaderboardMenu.transform);
-                    leaderboardButton.GetComponentInChildren<TMP_Text>().text = leaderboard;
-                    leaderboardButton.GetComponent<Button>().onClick.AddListener(() => PopulateLeaderboard(leaderboard));
+                    GameObject leaderboardButton = Instantiate(LeaderboardButtonPrefab, LeaderboardSelectPanel.transform);
+                    leaderboardButton.GetComponentInChildren<TMP_Text>().text = leaderboard.name;
+                    leaderboardButton.GetComponent<Button>().onClick.AddListener(() => PopulateLeaderboard(leaderboard.id));
                 }
             }
         });
@@ -115,7 +116,7 @@ public class MenuController : MonoBehaviour
     private void PopulateLeaderboard(string leaderboard)
     {
         // Clear leaderboard entries
-        foreach (Transform child in LeaderboardMenu.transform)
+        foreach (Transform child in LeaderboardSelectPanel.transform)
         {
             if (child.gameObject.tag == "LeaderboardObject")
             {
@@ -131,7 +132,7 @@ public class MenuController : MonoBehaviour
                 foreach (HKU.LeaderboardEntry entry in entries)
                 {
                     Debug.Log($"Entry: {entry.rank} - {entry.username} - {entry.score}"); // Voeg debuginformatie toe
-                    GameObject leaderboardEntry = Instantiate(LeaderboardEntryPrefab, LeaderboardMenu.transform);
+                    GameObject leaderboardEntry = Instantiate(LeaderboardEntryPrefab, LeaderboardSelectPanel.transform);
                     leaderboardEntry.GetComponentInChildren<TMP_Text>().text = entry.rank + " - " + entry.username + " - " + entry.score;
                 }
             }

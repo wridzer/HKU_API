@@ -34,7 +34,7 @@ void GetUsers(void (*callback)(char** users, int length, void* context), void* c
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
         CURLcode res = curl_easy_perform(curl);
         if (res != CURLE_OK) {
-            SendMessageToCallback("curl_easy_perform() failed: %d", curl_easy_strerror(res));
+            SendMessageToCallback("curl_easy_perform() failed: %s", curl_easy_strerror(res));
         } else {
             try {
                 auto jsonUsers = nlohmann::json::parse(readBuffer);
@@ -45,7 +45,7 @@ void GetUsers(void (*callback)(char** users, int length, void* context), void* c
                 for (const auto& user : jsonUsers) {
                     // Zorg ervoor dat je alleen de userName eigenschap krijgt.
                     if (!user["userName"].is_string()) {
-                        SendMessageToCallback("User name is not a string at index %d", i);
+                        SendMessageToCallback("User name is not a string at index %s", i);
                         users[i] = nullptr; // Gebruik nullptr om aan te geven dat het ophalen niet gelukt is
                         continue;
                     }
@@ -58,11 +58,11 @@ void GetUsers(void (*callback)(char** users, int length, void* context), void* c
             }
             catch (nlohmann::json::parse_error& pe) {
                 // Dit vangt parse errors
-                SendMessageToCallback("JSON parse error: %d", pe.what());
+                SendMessageToCallback("JSON parse error: %s", pe.what());
             }
             catch (nlohmann::json::exception& e) {
                 // Dit vangt alle andere nlohmann::json gerelateerde exceptions
-                SendMessageToCallback("JSON exception: %d", e.what());
+                SendMessageToCallback("JSON exception: %s", e.what());
             }
         }
         curl_easy_cleanup(curl);
@@ -95,7 +95,7 @@ void ConfigureProject(const char* project_ID, void(*callback)(bool IsSuccess, vo
 
         res = curl_easy_perform(curl);
         if (res != CURLE_OK) {
-            SendMessageToCallback("curl_easy_perform() failed: %d", curl_easy_strerror(res));
+            SendMessageToCallback("curl_easy_perform() failed: %s", curl_easy_strerror(res));
             callback(false, context);
             curl_easy_cleanup(curl);
             return;
@@ -113,12 +113,12 @@ void ConfigureProject(const char* project_ID, void(*callback)(bool IsSuccess, vo
             // Save the project ID locally
 			projectID = project_ID;
 
-            SendMessageToCallback("Project ID saved locally: %d", project_ID);
+            SendMessageToCallback("Project ID saved locally: %s", projectID.c_str());
             callback(true, context);
 
         }
         catch (nlohmann::json::exception& e) {
-            SendMessageToCallback("JSON parsing error: %d", e.what());
+            SendMessageToCallback("JSON parsing error: %s", e.what());
             callback(false, context);
         }
 
@@ -202,16 +202,16 @@ void Logout(void(*callback)(bool IsSuccess, void* context), void* context)
 			try {
 				auto responseJson = nlohmann::json::parse(readBuffer);
 				bool success = responseJson["Success"];
-                SendMessageToCallback("Request performed successfully! Success: %d", success);
+                SendMessageToCallback("Request performed successfully! Success: %s", success);
 				callback(success, context);
 			}
 			catch (nlohmann::json::exception& e) {
-				SendMessageToCallback("JSON parsing error: %d", e.what());
+				SendMessageToCallback("JSON parsing error: %s", e.what());
 				callback(false, context);
 			}
 		}
 		else {
-			SendMessageToCallback("curl_easy_perform() failed: %d", curl_easy_strerror(res));
+			SendMessageToCallback("curl_easy_perform() failed: %s", curl_easy_strerror(res));
 			callback(false, context);
 		}
 
@@ -252,12 +252,12 @@ void GetUser(char* user_ID, void(*callback)(char** username, int length, void* c
 				callback(&usernameCopy, 1, context);
 			}
 			catch (nlohmann::json::exception& e) {
-				SendMessageToCallback("JSON parsing error: %d", e.what());
+				SendMessageToCallback("JSON parsing error: %s", e.what());
 				callback(nullptr, 0, context);
 			}
 		}
 		else {
-			SendMessageToCallback("curl_easy_perform() failed: %d", curl_easy_strerror(res));
+			SendMessageToCallback("curl_easy_perform() failed: %s", curl_easy_strerror(res));
 			callback(nullptr, 0, context);
 		}
 
@@ -277,6 +277,7 @@ void GetLeaderboard(char* leaderboard_Id, char**& outArray, int amount, GetEntry
     std::string readBuffer;
 
     std::string url = "https://pong.hku.nl:5037/api/leaderboards/entries/" + std::string(leaderboard_Id) + "?amount=" + std::to_string(amount);
+	SendMessageToCallback("Constructed URL: %s", url.c_str());
 
     switch (option) {
     case GetEntryOptions::Highest:
@@ -310,7 +311,7 @@ void GetLeaderboard(char* leaderboard_Id, char**& outArray, int amount, GetEntry
 
         res = curl_easy_perform(curl);
         if (res != CURLE_OK) {
-            SendMessageToCallback("curl_easy_perform() failed: %d", curl_easy_strerror(res));
+            SendMessageToCallback("curl_easy_perform() failed: %s", curl_easy_strerror(res));
             callback(false, context);
             curl_easy_cleanup(curl);
             return;
@@ -331,7 +332,7 @@ void GetLeaderboard(char* leaderboard_Id, char**& outArray, int amount, GetEntry
             int i = 0;
             for (const auto& entry : responseJson) {
                 if (!entry["PlayerID"].is_string() || !entry["Score"].is_number() || !entry["Rank"].is_number()) {
-                    SendMessageToCallback("Invalid data at index %d", i / 3);
+                    SendMessageToCallback("Invalid data at index %s", i / 3);
                     outArray[i] = nullptr;
                     outArray[i + 1] = nullptr;
                     outArray[i + 2] = nullptr;
@@ -353,11 +354,11 @@ void GetLeaderboard(char* leaderboard_Id, char**& outArray, int amount, GetEntry
 
                 i += 3;
             }
-
+			outArray[numberOfEntries * 3] = nullptr; // Null-terminate the array
             callback(true, context);
         }
         catch (nlohmann::json::exception& e) {
-            SendMessageToCallback("JSON parsing error: %d", e.what());
+            SendMessageToCallback("JSON parsing error: %s", e.what());
             callback(false, context);
         }
 
@@ -382,18 +383,18 @@ void GetLeaderboardsForProject(char**& outArray, void(*callback)(bool IsSuccess,
 		return;
 	}
 
-    std::string url = "http://pong.hku.nl:5037/api/leaderboards/by-project/" + projectID;
-    SendMessageToCallback("Constructed URL: %d", url);
+    std::string url = "http://pong.hku.nl:5037/api/leaderboards/by-project/" + std::string(projectID);
+    SendMessageToCallback("Constructed URL: %s", url.c_str());
 
     curl = curl_easy_init();
     if (curl) {
-        curl_easy_setopt(curl, CURLOPT_URL, "http://pong.hku.nl:5037/api/leaderboards/by-project/" + std::string(projectID));
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
 
         res = curl_easy_perform(curl);
         if (res != CURLE_OK) {
-            SendMessageToCallback("curl_easy_perform() failed: %d", curl_easy_strerror(res));
+            SendMessageToCallback("curl_easy_perform() failed: %s", curl_easy_strerror(res));
             callback(false, context);
             curl_easy_cleanup(curl);
             return;
@@ -409,27 +410,33 @@ void GetLeaderboardsForProject(char**& outArray, void(*callback)(bool IsSuccess,
             }
 
             int numberOfLeaderboards = responseJson.size();
-            outArray = new char* [numberOfLeaderboards];
+            outArray = new char* [numberOfLeaderboards * 2 + 1]; // Allocate extra space for null terminator
 
             int i = 0;
             for (const auto& leaderboard : responseJson) {
-                if (!leaderboard["leaderboardId"].is_string()) {
+                if (!leaderboard["name"].is_string() || !leaderboard["id"].is_string()) {
                     SendMessageToCallback("Leaderboard ID is not a string at index %d", i);
                     outArray[i] = nullptr; // Use nullptr to indicate that fetching failed
                     continue;
                 }
 
-                std::string leaderboardId = leaderboard["leaderboardId"];
-                outArray[i] = new char[leaderboardId.length() + 1];
-                strcpy_s(outArray[i], leaderboardId.length() + 1, leaderboardId.c_str());
-                SendMessageToCallback("Leaderboard ID %d : %s", i, outArray[i]); // Debugging informatie
+                std::string leaderboardName = leaderboard["name"];
+                std::string leaderboardId = leaderboard["id"];
+
+                outArray[i * 2] = new char[leaderboardName.length() + 1];
+                strcpy_s(outArray[i * 2], leaderboardName.length() + 1, leaderboardName.c_str());
+
+                outArray[i * 2 + 1] = new char[leaderboardId.length() + 1];
+                strcpy_s(outArray[i * 2 + 1], leaderboardId.length() + 1, leaderboardId.c_str());
+
+                SendMessageToCallback("Leaderboard %d: Name = %s, ID = %s", i, outArray[i * 2], outArray[i * 2 + 1]);
                 i++;
             }
-
+            outArray[numberOfLeaderboards * 2] = nullptr; // Add null terminator
             callback(true, context);
         }
         catch (nlohmann::json::exception& e) {
-			SendMessageToCallback("JSON parsing error: %d", e.what());
+			SendMessageToCallback("JSON parsing error: %s", e.what());
             callback(false, context);
         }
 
@@ -473,16 +480,16 @@ void UploadLeaderboardScore(char* leaderboard, int score, void(*callback)(bool I
             try {
                 auto responseJson = nlohmann::json::parse(readBuffer);
                 int rank = responseJson["Rank"];
-                SendMessageToCallback("Request performed successfully! Rank: %d", rank);
+                SendMessageToCallback("Request performed successfully! Rank: %s", rank);
                 callback(true, rank, context);
             }
             catch (nlohmann::json::exception& e) {
-                SendMessageToCallback("JSON parsing error: %d", e.what());
+                SendMessageToCallback("JSON parsing error: %s", e.what());
                 callback(false, -1, context);
             }
         }
         else {
-            SendMessageToCallback("curl_easy_perform() failed: %d", curl_easy_strerror(res));
+            SendMessageToCallback("curl_easy_perform() failed: %s", curl_easy_strerror(res));
             callback(false, -1, context);
         }
 

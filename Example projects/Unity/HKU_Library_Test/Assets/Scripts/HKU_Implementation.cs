@@ -57,7 +57,7 @@ public class HKU_Implementation
         Logout(myLogoutCallbackDelegate, contextPtr);
     }
 
-    public void GetLeaderboards(Action<string[]> callback)
+    public void GetLeaderboards(Action<(string name, string id)[]> callback)
     {
         IntPtr outArrayPtr = IntPtr.Zero;
         myGetLeaderboardsForProjectCallbackDelegate = (isSuccess, context) =>
@@ -65,13 +65,13 @@ public class HKU_Implementation
             if (isSuccess)
             {
                 // Parse outArrayPtr to string array and invoke the callback
-                string[] leaderboards = MarshalPtrToStringArray(outArrayPtr);
-                foreach (string leaderboard in leaderboards)
+                var leaderboards = MarshalPtrToNameIdArray(outArrayPtr);
+                foreach (var leaderboard in leaderboards)
                 {
-                    Debug.Log($"Leaderboard ID: {leaderboard}"); // Debugging informatie
+                    Debug.Log($"Leaderboard: Name = {leaderboard.name}, ID = {leaderboard.id}"); // Debugging information
                 }
                 callback(leaderboards);
-                ReleaseMemory(outArrayPtr); // Vergeet niet het geheugen vrij te geven
+                ReleaseMemory(outArrayPtr); // Free the memory
             }
             else
             {
@@ -99,23 +99,25 @@ public class HKU_Implementation
                 callback(null);
             }
         };
-        GetLeaderboard(leaderboard.ToCharArray(), ref outArrayPtr, amount, option, myGetLeaderboardCallbackDelegate, contextPtr);
+        GetLeaderboard(leaderboard, ref outArrayPtr, amount, option, myGetLeaderboardCallbackDelegate, contextPtr);
     }
 
-    private string[] MarshalPtrToStringArray(IntPtr ptr)
+    private (string name, string id)[] MarshalPtrToNameIdArray(IntPtr ptr)
     {
         int count = 0;
-        // First count the number of strings in the array
+        // First count the number of pairs in the array
         while (Marshal.ReadIntPtr(ptr, count * IntPtr.Size) != IntPtr.Zero)
         {
             count++;
         }
 
-        string[] result = new string[count];
-        for (int i = 0; i < count; i++)
+        var result = new (string name, string id)[count / 2];
+        for (int i = 0; i < count; i += 2)
         {
-            IntPtr stringPtr = Marshal.ReadIntPtr(ptr, i * IntPtr.Size);
-            result[i] = Marshal.PtrToStringAnsi(stringPtr);
+            IntPtr namePtr = Marshal.ReadIntPtr(ptr, i * IntPtr.Size);
+            IntPtr idPtr = Marshal.ReadIntPtr(ptr, (i + 1) * IntPtr.Size);
+
+            result[i / 2] = (Marshal.PtrToStringAnsi(namePtr), Marshal.PtrToStringAnsi(idPtr));
         }
 
         return result;
@@ -151,7 +153,7 @@ public class HKU_Implementation
     {
         if (ptr != IntPtr.Zero)
         {
-            FreeMemory(ptr);
+            //FreeMemory(ptr);
         }
     }
 

@@ -326,12 +326,12 @@ void GetLeaderboard(char* leaderboard_Id, char**& outArray, int amount, GetEntry
                 return;
             }
 
-            int numberOfEntries = responseJson.size();
+            int numberOfEntries = responseJson["entries"].size();
             outArray = new char* [numberOfEntries * 3 + 1]; // Allocate extra space for null terminator
 
             int i = 0;
-            for (const auto& entry : responseJson) {
-                if (!entry["PlayerID"].is_string() || !entry["Score"].is_number() || !entry["Rank"].is_number()) {
+            for (const auto& entry : responseJson["entries"]) {
+                if (!entry["playerID"].is_string() || !entry["score"].is_number() || !entry["rank"].is_number()) {
                     SendMessageToCallback("Invalid data at index %d", i / 3);
                     outArray[i] = nullptr;
                     outArray[i + 1] = nullptr;
@@ -339,9 +339,9 @@ void GetLeaderboard(char* leaderboard_Id, char**& outArray, int amount, GetEntry
                     continue;
                 }
 
-                std::string playerId = entry["PlayerID"];
-                std::string score = std::to_string(entry["Score"].get<int>());
-                std::string rank = std::to_string(entry["Rank"].get<int>());
+                std::string playerId = entry["playerID"];
+                std::string score = std::to_string(entry["score"].get<int>());
+                std::string rank = std::to_string(entry["rank"].get<int>());
 
                 outArray[i] = new char[playerId.length() + 1];
                 strcpy_s(outArray[i], playerId.length() + 1, playerId.c_str());

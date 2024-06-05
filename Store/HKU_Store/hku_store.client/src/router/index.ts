@@ -9,6 +9,7 @@ import ProjectManagement from '../views/ProjectManagement.vue';
 import Dashboard from '../views/DashBoard.vue';
 import Store from '../views/StorePage.vue';
 import UserList from '../views/UserList.vue';
+import Guide from '../views/Guide.vue';
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -56,6 +57,11 @@ const routes: Array<RouteRecordRaw> = [
         path: '/userlist',
         name: 'UserList',
         component: UserList
+    },
+    {
+        path: '/guide',
+        name: 'Guide',
+        component: Guide
     }
 ];
 

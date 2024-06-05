@@ -4,7 +4,7 @@
         <ul>
             <li><router-link to="/dashboard">Project Dashboard</router-link></li>
             <li><router-link to="/storepage">Store</router-link></li>
-            <li><router-link to="/userlist">Users</router-link></li>
+            <li><router-link to="/guide">Guide</router-link></li>
             <li><router-link to="/">Account</router-link></li>
         </ul>
     </div>

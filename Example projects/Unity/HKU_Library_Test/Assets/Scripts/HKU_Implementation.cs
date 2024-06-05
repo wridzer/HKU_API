@@ -13,6 +13,8 @@ public class HKU_Implementation
     private ConfigureProjectCallbackDelegate myConfigureProjectCallbackDelegate;
     private LoginStatusCallbackDelegate myLoginStatusCallbackDelegate;
     private LogoutCallbackDelegate myLogoutCallbackDelegate;
+    private GetUserCallbackDelegate myGetUserCallbackDelegate;
+    private UploadLeaderboardScoreCallbackDelegate myUploadLeaderboardScoreCallbackDelegate;
     private LeaderboardCallbackDelegate myGetLeaderboardCallbackDelegate;
     private GetLeaderboardsForProjectCallbackDelegate myGetLeaderboardsForProjectCallbackDelegate;
     private DebugOutputDelegate myDebugOutputDelegate;
@@ -55,6 +57,36 @@ public class HKU_Implementation
         // Logout
         myLogoutCallbackDelegate = LogoutCallback;
         Logout(myLogoutCallbackDelegate, contextPtr);
+    }
+
+    public string GetUsername(string userID)
+    {
+        string username = "";
+        IntPtr usernamePtr = Marshal.StringToHGlobalAnsi(username);
+        myGetUserCallbackDelegate = (usernameOut, length, context) =>
+        {
+            username = Marshal.PtrToStringAnsi(usernameOut);
+        };
+        GetUser(userID, myGetUserCallbackDelegate, contextPtr);
+
+        return username;
+    }
+
+    public void UploadScore(string leaderboard, int score)
+    {
+        // Upload score
+        myUploadLeaderboardScoreCallbackDelegate = (isSuccess, rank, context) =>
+        {
+            if (isSuccess)
+            {
+                Debug.Log("Score uploaded successfully, you are now rank: " + rank);
+            }
+            else
+            {
+                Debug.Log("Failed to upload score");
+            }
+        };
+        UploadLeaderboardScore(leaderboard, score, myUploadLeaderboardScoreCallbackDelegate, contextPtr);
     }
 
     public void GetLeaderboards(Action<(string name, string id)[]> callback)
@@ -211,34 +243,6 @@ public class HKU_Implementation
         else
         {
             Debug.Log("Logout failed");
-        }
-    }
-
-    public static void GetLeaderboardsCallback(bool isSuccess, IntPtr context)
-    {
-        if (isSuccess)
-        {
-            // Process the fetched entries
-            Debug.Log("Leaderboard entries fetched successfully.");
-            // You need to process the IntPtr array (outArray) here
-        }
-        else
-        {
-            Debug.LogError("Failed to fetch leaderboard entries.");
-        }
-    }
-
-    public static void GetLeaderboardEntriesCallback(bool isSuccess, IntPtr context)
-    {
-        if (isSuccess)
-        {
-            // Process the fetched entries
-            Debug.Log("Leaderboard entries fetched successfully.");
-            // You need to process the IntPtr array (outArray) here
-        }
-        else
-        {
-            Debug.LogError("Failed to fetch leaderboard entries.");
         }
     }
 

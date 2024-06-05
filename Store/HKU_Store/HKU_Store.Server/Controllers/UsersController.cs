@@ -37,7 +37,7 @@ public class UsersController : ControllerBase
         }
         return NotFound();
     }
-    // GET: api/users/by-username/{username}
+
     [HttpGet("by-username/{username}")]
     public async Task<IActionResult> GetUserIdByUsername(string username)
     {
@@ -53,6 +53,23 @@ public class UsersController : ControllerBase
         }
 
         return Ok(new { UserId = user.Id });
+    }
+
+    [HttpGet("by-id/{id}")]
+    public async Task<IActionResult> GetUserById(string id)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return BadRequest("User ID is required");
+        }
+
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            return NotFound("User not found");
+        }
+
+        return Ok(new { user.UserName, user.Email });
     }
 
 

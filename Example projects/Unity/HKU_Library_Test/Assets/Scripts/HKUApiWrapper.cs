@@ -35,9 +35,9 @@ namespace HKU
         [DllImport("HKU_SDK", CallingConvention = CallingConvention.Cdecl)]
         public static extern void Logout(LogoutCallbackDelegate callback, IntPtr context);
         [DllImport("HKU_SDK", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void GetUser(char[] user_ID, IntPtr callback, IntPtr context);
+        public static extern void GetUser(string user_ID, GetUserCallbackDelegate callback, IntPtr context);
         [DllImport("HKU_SDK", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void UploadLeaderboardScore(char[] leaderboard, int score, UploadLeaderboardScoreCallbackDelegate callback, IntPtr context);
+        public static extern void UploadLeaderboardScore(string leaderboard, int score, UploadLeaderboardScoreCallbackDelegate callback, IntPtr context);
         [DllImport("HKU_SDK", CallingConvention = CallingConvention.Cdecl)]
         public static extern void GetLeaderboard(string leaderboard_Id, ref IntPtr outArray, int amount, GetEntryOptions option, LeaderboardCallbackDelegate callback, IntPtr context);
         [DllImport("HKU_SDK", CallingConvention = CallingConvention.Cdecl)]

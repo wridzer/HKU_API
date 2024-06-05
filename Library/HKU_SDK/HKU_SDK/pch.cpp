@@ -479,7 +479,7 @@ void UploadLeaderboardScore(char* leaderboard, int score, void(*callback)(bool I
         if (res == CURLE_OK) {
             try {
                 auto responseJson = nlohmann::json::parse(readBuffer);
-                int rank = responseJson["Rank"];
+                int rank = responseJson["rank"];
                 SendMessageToCallback("Request performed successfully! Rank: %s", rank);
                 callback(true, rank, context);
             }

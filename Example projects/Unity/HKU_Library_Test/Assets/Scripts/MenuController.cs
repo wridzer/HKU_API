@@ -12,7 +12,10 @@ public class MenuController : MonoBehaviour
     [SerializeField] private TMP_Text loginButtonText;
     [SerializeField] private GameObject mainMenu;
     [SerializeField] private GameObject LeaderboardMenu;
+    [SerializeField] private GameObject GameMenu;
+    [SerializeField] private GameObject StartButton;
     [Header("Leaderboard")]
+    [SerializeField] private GameObject LeaderboardScoreInputfield;
     [SerializeField] private GameObject LeaderboardEntryPrefab;
     [SerializeField] private GameObject LeaderboardButtonPrefab;
     [SerializeField] private GameObject LeaderboardSelectPanel;
@@ -47,6 +50,25 @@ public class MenuController : MonoBehaviour
         UpdateLoginStatus();
     }
 
+    public void BackToMainMenu()
+    {
+        mainMenu.SetActive(true);
+        LeaderboardMenu.SetActive(false);
+        GameMenu.SetActive(false);
+    }
+
+    public void StartGame()
+    {
+        mainMenu.SetActive(false);
+        LeaderboardMenu.SetActive(false);
+        GameMenu.SetActive(true);
+    }
+
+    public void QuitGame()
+    {
+        Application.Quit();
+    }
+
     // Account login/logout
     public void UpdateLoginStatus()
     {
@@ -54,11 +76,13 @@ public class MenuController : MonoBehaviour
         {
             UserInfo.text = "Logged in as: " + hku.userID;
             loginButtonText.text = "Logout";
+            StartButton.GetComponent<Button>().interactable = true;
         }
         else
         {
             UserInfo.text = "Not logged in";
             loginButtonText.text = "Login";
+            StartButton.GetComponent<Button>().interactable = false;
         }
     }
     
@@ -74,6 +98,13 @@ public class MenuController : MonoBehaviour
     }
 
     // Leaderboard
+    public void SendScore()
+    {
+        int score = int.Parse(LeaderboardScoreInputfield.GetComponent<TMP_InputField>().text);
+        hku.UploadScore("8c1da6f8-1f01-4f12-8c92-acdcf1c09684", score);
+        BackToMainMenu();
+    }
+
     public void OpenLeaderboards()
     {
         mainMenu.SetActive(false);
@@ -133,7 +164,7 @@ public class MenuController : MonoBehaviour
                 {
                     Debug.Log($"Entry: {entry.Rank} - {entry.PlayerID} - {entry.Score}"); // Voeg debuginformatie toe
                     GameObject leaderboardEntry = Instantiate(LeaderboardEntryPrefab, LeaderboardSelectPanel.transform);
-                    leaderboardEntry.GetComponentInChildren<TMP_Text>().text = entry.Rank + " - " + entry.PlayerID + " - " + entry.Score;
+                    leaderboardEntry.GetComponentInChildren<TMP_Text>().text = entry.Rank + " - " + hku.GetUsername(entry.PlayerID) + " - " + entry.Score;
                 }
             }
             else
@@ -141,17 +172,6 @@ public class MenuController : MonoBehaviour
                 Debug.LogError("Failed to fetch leaderboard entries.");
             }
         });
-    }
-
-
-    public void StartGame()
-    {
-
-    }
-
-    public void QuitGame()
-    {
-        Application.Quit();
     }
 
 }

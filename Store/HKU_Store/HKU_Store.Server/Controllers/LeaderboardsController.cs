@@ -48,9 +48,10 @@ public class LeaderboardsController : ControllerBase
             await connection.OpenAsync();
             using (var command = connection.CreateCommand())
             {
-                command.CommandText = $"SELECT Score FROM `Leaderboard_{leaderboardId}` WHERE PlayerID = '{entry.PlayerID}'";
-                var currentScoreObj = await command.ExecuteScalarAsync(); // safer, as it returns the first column of the first row
-                int? currentScore = currentScoreObj as int?;
+                command.CommandText = $"SELECT Score FROM `Leaderboard_{leaderboardId}` WHERE PlayerID = @PlayerID";
+                command.Parameters.Add(new SqliteParameter("@PlayerID", entry.PlayerID));
+                var currentScoreObj = await command.ExecuteScalarAsync();
+                int? currentScore = currentScoreObj != DBNull.Value ? (int?)(long)currentScoreObj : null;
 
                 bool shouldUpdate = currentScore == null ||
                                     (leaderboardInfo.SortMethod == ESortMethod.Descending && entry.Score > currentScore) ||
@@ -58,13 +59,23 @@ public class LeaderboardsController : ControllerBase
 
                 if (shouldUpdate)
                 {
-                    command.CommandText = currentScore == null ?
-                                          $"INSERT INTO `Leaderboard_{leaderboardId}` (PlayerID, Score) VALUES ('{entry.PlayerID}', {entry.Score})" :
-                                          $"UPDATE `Leaderboard_{leaderboardId}` SET Score = {entry.Score} WHERE PlayerID = '{entry.PlayerID}'";
+                    if (currentScore == null)
+                    {
+                        command.CommandText = $"INSERT INTO `Leaderboard_{leaderboardId}` (PlayerID, Score) VALUES (@PlayerID, @Score)";
+                    }
+                    else
+                    {
+                        command.CommandText = $"UPDATE `Leaderboard_{leaderboardId}` SET Score = @Score WHERE PlayerID = @PlayerID";
+                    }
+                    command.Parameters.Clear();
+                    command.Parameters.Add(new SqliteParameter("@PlayerID", entry.PlayerID));
+                    command.Parameters.Add(new SqliteParameter("@Score", entry.Score));
                     await command.ExecuteNonQueryAsync();
                 }
 
-                command.CommandText = $"SELECT COUNT(*) FROM `Leaderboard_{leaderboardId}` WHERE Score {(leaderboardInfo.SortMethod == ESortMethod.Descending ? ">" : "<")} {entry.Score}";
+                command.CommandText = $"SELECT COUNT(*) FROM `Leaderboard_{leaderboardId}` WHERE Score {(leaderboardInfo.SortMethod == ESortMethod.Descending ? ">" : "<")} @Score";
+                command.Parameters.Clear();
+                command.Parameters.Add(new SqliteParameter("@Score", entry.Score));
                 var rank = 1 + Convert.ToInt32(await command.ExecuteScalarAsync());
 
                 return Ok(new { Message = "Entry added successfully.", Rank = rank });

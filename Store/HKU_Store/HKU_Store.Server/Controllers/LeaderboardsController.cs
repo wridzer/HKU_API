@@ -141,15 +141,20 @@ public class LeaderboardsController : ControllerBase
     [HttpGet("entries/{leaderboardId}")]
     public async Task<IActionResult> GetEntries(string leaderboardId, [FromQuery] int amount = 10, [FromQuery] GetEntryOptions option = GetEntryOptions.Highest, [FromQuery] string playerId = null)
     {
+        var leaderboardInfo = await _context.AppLeaderboardsInfo.FindAsync(leaderboardId);
+        if (leaderboardInfo == null)
+            return NotFound("Leaderboard not found.");
+
         string tableName = $"\"Leaderboard_{leaderboardId}\""; // Properly quote the table name
         string sql;
         int playerScore = 0;
         List<LeaderboardEntry> entries = new List<LeaderboardEntry>();
+        string orderDirection = leaderboardInfo.SortMethod == ESortMethod.Ascending ? "ASC" : "DESC";
 
         switch (option)
         {
             case GetEntryOptions.Highest:
-                sql = $"SELECT PlayerID, Score FROM {tableName} ORDER BY Score DESC LIMIT @amount";
+                sql = $"SELECT PlayerID, Score FROM {tableName} ORDER BY Score {orderDirection} LIMIT @amount";
                 using (var command = _context.Database.GetDbConnection().CreateCommand())
                 {
                     command.CommandText = sql;
@@ -188,10 +193,10 @@ public class LeaderboardsController : ControllerBase
                 }
 
                 sql = $@"
-            (SELECT PlayerID, Score FROM {tableName} WHERE Score > @playerScore ORDER BY Score ASC LIMIT @halfAmount)
+            (SELECT PlayerID, Score FROM {tableName} WHERE Score {GetComparisonOperator(leaderboardInfo.SortMethod, true)} @playerScore ORDER BY Score {GetOppositeOrderDirection(leaderboardInfo.SortMethod)} LIMIT @halfAmount)
             UNION
-            (SELECT PlayerID, Score FROM {tableName} WHERE Score <= @playerScore ORDER BY Score DESC LIMIT @halfAmount)
-            ORDER BY Score DESC";
+            (SELECT PlayerID, Score FROM {tableName} WHERE Score {GetComparisonOperator(leaderboardInfo.SortMethod, false)} @playerScore ORDER BY Score {orderDirection} LIMIT @halfAmount)
+            ORDER BY Score {orderDirection}";
                 using (var command = _context.Database.GetDbConnection().CreateCommand())
                 {
                     command.CommandText = sql;
@@ -217,7 +222,7 @@ public class LeaderboardsController : ControllerBase
                 if (amount < 1)
                     return BadRequest("Amount must be at least 1 for AtRank option.");
 
-                sql = $"SELECT PlayerID, Score FROM {tableName} ORDER BY Score DESC LIMIT @offset, 1";
+                sql = $"SELECT PlayerID, Score FROM {tableName} ORDER BY Score {orderDirection} LIMIT @offset, 1";
                 using (var command = _context.Database.GetDbConnection().CreateCommand())
                 {
                     command.CommandText = sql;
@@ -244,6 +249,20 @@ public class LeaderboardsController : ControllerBase
 
         return Ok(new { entries });
     }
+
+    private string GetComparisonOperator(ESortMethod sortMethod, bool isUpper)
+    {
+        if (sortMethod == ESortMethod.Ascending)
+            return isUpper ? ">" : "<=";
+        else
+            return isUpper ? "<" : ">=";
+    }
+
+    private string GetOppositeOrderDirection(ESortMethod sortMethod)
+    {
+        return sortMethod == ESortMethod.Ascending ? "DESC" : "ASC";
+    }
+
 
     [HttpGet("by-project/{projectId}")]
     public async Task<IActionResult> GetLeaderboardsByProject(string projectId)

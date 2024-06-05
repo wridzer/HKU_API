@@ -223,7 +223,7 @@ void Logout(void(*callback)(bool IsSuccess, void* context), void* context)
 	}
 }
 
-void GetUser(char* user_ID, void(*callback)(char** username, int length, void* context), void* context)
+void GetUser(char* user_ID, void(*callback)(char* username, int length, void* context), void* context)
 {
 	CURL* curl;
 	CURLcode res;
@@ -231,7 +231,7 @@ void GetUser(char* user_ID, void(*callback)(char** username, int length, void* c
 	std::string readBuffer; // Buffer to hold response data
 
 	// URL construction
-	std::string url = "http://pong.hku.nl:5037/api/users/" + std::string(user_ID);
+	std::string url = "http://pong.hku.nl:5037/api/users/by-id/" + std::string(user_ID);
 
 	curl = curl_easy_init();
 	if (curl) {
@@ -246,10 +246,10 @@ void GetUser(char* user_ID, void(*callback)(char** username, int length, void* c
 			try {
 				auto responseJson = nlohmann::json::parse(readBuffer);
 				std::string username = responseJson["userName"];
-                SendMessageToCallback("Request performed successfully! Username: ", username);
+                //SendMessageToCallback("User request performed successfully! Username: %s", username);
 				char* usernameCopy = new char[username.length() + 1];
 				strcpy_s(usernameCopy, username.length() + 1, username.c_str());
-				callback(&usernameCopy, 1, context);
+				callback(usernameCopy, 1, context);
 			}
 			catch (nlohmann::json::exception& e) {
 				SendMessageToCallback("JSON parsing error: %s", e.what());
@@ -448,7 +448,6 @@ void GetLeaderboardsForProject(char**& outArray, void(*callback)(bool IsSuccess,
     }
 }
 
-
 void UploadLeaderboardScore(char* leaderboard, int score, void(*callback)(bool IsSuccess, int currentRank, void* context), void* context)
 {
     CURL* curl;
@@ -480,7 +479,7 @@ void UploadLeaderboardScore(char* leaderboard, int score, void(*callback)(bool I
             try {
                 auto responseJson = nlohmann::json::parse(readBuffer);
                 int rank = responseJson["rank"];
-                SendMessageToCallback("Request performed successfully! Rank: %s", rank);
+                SendMessageToCallback("Request performed successfully! Rank: %d", rank);
                 callback(true, rank, context);
             }
             catch (nlohmann::json::exception& e) {

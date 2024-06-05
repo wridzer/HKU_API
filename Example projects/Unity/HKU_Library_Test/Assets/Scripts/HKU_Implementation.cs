@@ -61,12 +61,17 @@ public class HKU_Implementation
 
     public string GetUsername(string userID)
     {
-        string username = "";
-        IntPtr usernamePtr = Marshal.StringToHGlobalAnsi(username);
+        string username = null;
+        GCHandle handle = GCHandle.Alloc(username);
+        IntPtr contextPtr = GCHandle.ToIntPtr(handle);
+
         myGetUserCallbackDelegate = (usernameOut, length, context) =>
         {
             username = Marshal.PtrToStringAnsi(usernameOut);
+            Debug.Log(username);
+            handle.Free();
         };
+
         GetUser(userID, myGetUserCallbackDelegate, contextPtr);
 
         return username;
@@ -124,7 +129,7 @@ public class HKU_Implementation
                 // Parse outArrayPtr to LeaderboardEntry array and invoke the callback
                 HKU.LeaderboardEntry[] entries = MarshalPtrToLeaderboardEntryArray(outArrayPtr);
                 callback(entries);
-                FreeMemory(outArrayPtr); // Free the memory
+                //FreeMemory(outArrayPtr); // Free the memory
             }
             else
             {

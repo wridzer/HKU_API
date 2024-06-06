@@ -2,10 +2,10 @@
     <div class="download-page">
         <h1>Download Page</h1>
         <div class="download-links">
-            <a :href="libraryZipUrl" download>
+            <a href="/Library.zip" download>
                 <button>Download Library.zip</button>
             </a>
-            <a :href="unityExampleZipUrl" download>
+            <a href="/UnityExample.zip" download>
                 <button>Download UnityExample.zip</button>
             </a>
         </div>
@@ -14,12 +14,7 @@
 
 <script>
     export default {
-        data() {
-            return {
-                libraryZipUrl: require('@/assets/Library.zip'),
-                unityExampleZipUrl: require('@/assets/UnityExample.zip'),
-            };
-        },
+        name: 'DownloadPage'
     };
 </script>
 

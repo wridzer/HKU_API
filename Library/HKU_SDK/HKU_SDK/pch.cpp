@@ -484,6 +484,7 @@ void UploadLeaderboardScore(char* leaderboard, int score, void(*callback)(bool I
             }
             catch (nlohmann::json::exception& e) {
                 SendMessageToCallback("JSON parsing error: %s", e.what());
+				SendMessageToCallback("Response: %s", readBuffer.c_str());
                 callback(false, -1, context);
             }
         }

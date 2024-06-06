@@ -3,6 +3,10 @@
         <h1>Edit Project</h1>
         <!-- Input for project name -->
         <div>
+            <label for="projectId">Project ID:</label>
+            <p>{{ $route.params.id }}</p>
+        </div>
+        <div>
             <label for="projectName">Project Name:</label>
             <input id="projectName" v-model="project.name" type="text" placeholder="Enter project name">
         </div>
@@ -67,6 +71,7 @@
                         <input v-model="leaderboard.description" placeholder="Description" />
                         <button @click="updateLeaderboard(leaderboard.id)">Update</button>
                         <button @click="deleteLeaderboard(leaderboard.id)">Delete</button>
+                        <p>{{ leaderboard.id }}</p>
                     </div>
                 </li>
             </ul>
@@ -187,7 +192,7 @@
         display: flow;
         justify-content: left; /* Center content horizontally */
         max-width: calc(100% - 200px); /* Full width minus sidebar width */
-        min-width: 1000px; /* Resets minimum width to enable shrinking */
+        min-width: 1200px; /* Resets minimum width to enable shrinking */
         padding: 20px; /* Provides some internal spacing */
         margin-top: 0;
         padding-top: 0;

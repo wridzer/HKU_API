@@ -21,11 +21,17 @@ public class LeaderboardsController : ControllerBase
         await _context.SaveChangesAsync();
 
         // Dynamically create the leaderboard table
-        string tableName = $"`Leaderboard_{leaderboardInfo.ID}`";
-        string sql = $"CREATE TABLE {tableName} (ID INT PRIMARY KEY AUTO_INCREMENT, PlayerID VARCHAR(255), Score INT)";
+        string tableName = $"\"Leaderboard_{leaderboardInfo.ID}\"";
+        string sql = $"CREATE TABLE {tableName} (ID INTEGER PRIMARY KEY AUTOINCREMENT, PlayerID TEXT, Score INTEGER)";
         try
         {
-            await _context.ExecuteSqlCommand(sql);
+            var connection = _context.Database.GetDbConnection();
+            await connection.OpenAsync();
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = sql;
+                await command.ExecuteNonQueryAsync();
+            }
             return Ok($"Leaderboard table {tableName} created successfully.");
         }
         catch (Exception ex)

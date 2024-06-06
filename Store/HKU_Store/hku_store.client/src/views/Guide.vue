@@ -1,363 +1,307 @@
 <template>
     <div class="container">
-        <div class="sidebar">
-            <ul>
-                <li><a href="#setup">Setup Unity Project</a></li>
-                <li><a href="#import-scripts">Import Scripts</a></li>
-                <li><a href="#configure-project">Configure Project</a></li>
-                <li><a href="#login-logout">Implement Login and Logout</a></li>
-                <li><a href="#leaderboards">Working with Leaderboards</a></li>
-                <li><a href="#example-code">Example Code</a></li>
-            </ul>
-        </div>
-        <div class="content">
-            <section id="setup">
-                <h2>Setup Unity Project</h2>
-                <ol>
-                    <li>
-                        Download and Import the .dll File:
-                        <ul>
-                            <li>Provide users with the compiled .dll file.</li>
-                            <li>Place the .dll file in the <code>Assets/Plugins</code> directory of your Unity project.</li>
-                        </ul>
-                    </li>
-                </ol>
-            </section>
+        <aside class="sidebar">
+            <nav>
+                <ul>
+                    <li><a href="#setup">Setup</a></li>
+                    <li><a href="#configuration">Configuration</a></li>
+                    <li><a href="#authentication">User Authentication</a></li>
+                    <li><a href="#user-data">User Data</a></li>
+                    <li><a href="#leaderboards">Leaderboards</a></li>
+                    <li><a href="#debugging">Debugging</a></li>
+                </ul>
+            </nav>
+        </aside>
+        <div class="guide-content">
+            <!-- Your existing content starts here -->
+            <div class="guide">
+                <h1 id="setup">Using the HKU API Wrapper in Unity</h1>
+                <section>
+                    <h2>Setup</h2>
+                    <h3>Step 1: Importing the DLL and Wrapper</h3>
+                    <ol>
+                        <li>Place the <code>HKUApiWrapper.dll</code> file into the <code>Assets/Plugins</code> folder of your Unity project.</li>
+                        <li>Ensure the <code>HKUApiWrapper.cs</code> script is also included in your project.</li>
+                    </ol>
+                </section>
+                <section>
+                    <h2 id="configuration">Configuration</h2>
+                    <h3>Configure the Project</h3>
+                    <p>Before calling any other functions, you need to configure the project with your Project ID.</p>
+                    <pre><code>using HKU;
+using System;
+using UnityEngine;
 
-            <section id="import-scripts">
-                <h2>Import Scripts</h2>
-                <ol>
-                    <li>
-                        Copy the Required Scripts:
-                        <ul>
-                            <li>
-                                Ensure the following scripts are included in your project:
-                                <ul>
-                                    <li><code>HKUApiWrapper.cs</code></li>
-                                    <li><code>HKU_Implementation.cs</code></li>
-                                </ul>
-                            </li>
-                            <li>Place these scripts in the <code>Assets/Scripts</code> directory of your Unity project.</li>
-                        </ul>
-                    </li>
-                </ol>
-            </section>
-
-            <section id="configure-project">
-                <h2>Configure Project</h2>
-                <ol>
-                    <li>
-                        Configure the Project:
-                        <ul>
-                            <li>Call the <code>ConfigureProject</code> method with your project ID to set up the project configuration.</li>
-                        </ul>
-                        <pre><code>HKU_Implementation hku = new HKU_Implementation();
-hku.Initialize("YourProjectID");</code></pre>
-                    </li>
-                </ol>
-            </section>
-
-            <section id="login-logout">
-                <h2>Implement Login and Logout</h2>
-                <h3>Create Login</h3>
-                <ol>
-                    <li>
-                        Call the Login Function:
-                        <ul>
-                            <li>Use the <code>Login</code> method to initiate the login process. This will open the login page.</li>
-                        </ul>
-                        <pre><code>hku.Login();</code></pre>
-                    </li>
-                    <li>
-                        Start Polling:
-                        <ul>
-                            <li>After calling the login function, start polling to check if the user is logged in.</li>
-                        </ul>
-                        <pre><code>hku.StartPolling((isSuccess, userId) => {
-    if (isSuccess) {
-        Debug.Log("Logged in as user: " + userId);
-    } else {
-        Debug.Log("Login failed");
-    }
-});</code></pre>
-                    </li>
-                    <li>
-                        Cancel Polling:
-                        <ul>
-                            <li>To cancel polling, call the <code>CancelPolling</code> function.</li>
-                        </ul>
-                        <pre><code>hku.CancelPolling();</code></pre>
-                    </li>
-                    <li>
-                        Handle Login Callback:
-                        <ul>
-                            <li>You will receive a callback when the user is logged in, which will contain their user ID.</li>
-                        </ul>
-                    </li>
-                </ol>
-
-                <h3>Create Logout</h3>
-                <ol>
-                    <li>
-                        Call the Logout Function:
-                        <ul>
-                            <li>Use the <code>Logoff</code> method to log out the current user.</li>
-                        </ul>
-                        <pre><code>hku.Logoff((isSuccess) => {
-    if (isSuccess) {
-        Debug.Log("Logged out successfully");
-    } else {
-        Debug.Log("Logout failed");
-    }
-});</code></pre>
-                    </li>
-                </ol>
-            </section>
-
-            <section id="leaderboards">
-                <h2>Working with Leaderboards</h2>
-                <h3>Upload Scores</h3>
-                <ol>
-                    <li>
-                        Upload Score to Leaderboard:
-                        <ul>
-                            <li>Use the <code>UploadScore</code> method to upload a score to a specific leaderboard.</li>
-                        </ul>
-                        <pre><code>hku.UploadScore("LeaderboardID", score, (isSuccess, rank) => {
-    if (isSuccess) {
-        Debug.Log("Score uploaded successfully, current rank: " + rank);
-    } else {
-        Debug.Log("Failed to upload score");
-    }
-});</code></pre>
-                    </li>
-                </ol>
-
-                <h3>Fetch and Display Leaderboards</h3>
-                <ol>
-                    <li>
-                        Fetch Leaderboards:
-                        <ul>
-                            <li>Use the <code>GetLeaderboards</code> method to fetch the list of leaderboards for the project.</li>
-                        </ul>
-                        <pre><code>hku.GetLeaderboards((leaderboards) => {
-    if (leaderboards != null) {
-        foreach (var leaderboard in leaderboards) {
-            Debug.Log("Leaderboard: " + leaderboard.name + " - ID: " + leaderboard.id);
-        }
-    } else {
-        Debug.Log("Failed to fetch leaderboards");
-    }
-});</code></pre>
-                    </li>
-                    <li>
-                        Fetch Leaderboard Entries:
-                        <ul>
-                            <li>Use the <code>GetLeaderboardEntries</code> method to fetch entries for a specific leaderboard.</li>
-                        </ul>
-                        <pre><code>hku.GetLeaderboardEntries("LeaderboardID", 10, HKU.HKUApiWrapper.GetEntryOptions.Highest, (entries) => {
-    if (entries != null) {
-        foreach (var entry in entries) {
-            Debug.Log("Rank: " + entry.Rank + ", PlayerID: " + entry.PlayerID + ", Score: " + entry.Score);
-        }
-    } else {
-        Debug.Log("Failed to fetch leaderboard entries");
-    }
-});</code></pre>
-                    </li>
-                </ol>
-            </section>
-
-            <section id="example-code">
-                <h2>Example Code</h2>
-                <p>Here is an example of how a Unity MonoBehaviour script might look, integrating your .dll functionalities:</p>
-                <pre><code>using UnityEngine;
-using HKU;
-
-public class ExampleIntegration : MonoBehaviour
+public class Example : MonoBehaviour
 {
-    private HKU_Implementation hku;
-
-    void Start()
+    private void Start()
     {
-        // Initialize HKU implementation with your project ID
-        hku = new HKU_Implementation();
-        hku.Initialize("YourProjectID");
+        ConfigureProject("YourProjectID", OnConfigureProject);
     }
 
-    public void OnLoginButtonClicked()
+    private void ConfigureProject(string projectId, Action&lt;bool&gt; callback)
     {
-        // Start the login process
-        hku.Login();
-        hku.StartPolling((isSuccess, userId) => {
-            if (isSuccess)
-            {
-                Debug.Log("Logged in as user: " + userId);
-                // Update your UI or game state accordingly
-            }
-            else
-            {
-                Debug.Log("Login failed");
-            }
-        });
+        HKUApiWrapper.ConfigureProject(projectId, (isSuccess, context) =&gt;
+        {
+            callback(isSuccess);
+        }, IntPtr.Zero);
     }
 
-    public void OnCancelPollingButtonClicked()
+    private void OnConfigureProject(bool isSuccess)
     {
-        // Cancel the polling process
-        hku.CancelPolling();
+        if (isSuccess)
+        {
+            Debug.Log("Project configured successfully.");
+        }
+        else
+        {
+            Debug.LogError("Failed to configure project.");
+        }
+    }
+}
+          </code></pre>
+                </section>
+
+                <section>
+                    <h2 id="authentication">User Authentication</h2>
+                    <h3>Open Login Page</h3>
+                    <p>To authenticate users, you need to open the login page in the browser.</p>
+                    <pre><code>public void OpenLogin()
+{
+    HKUApiWrapper.OpenLoginPage();
+}
+          </code></pre>
+
+                    <h3>Start Polling for Login Status</h3>
+                    <pre><code>public void StartLoginPolling()
+{
+    HKUApiWrapper.StartPolling(OnLoginStatus, IntPtr.Zero);
+}
+
+private void OnLoginStatus(bool isSuccess, string userId, IntPtr context)
+{
+    if (isSuccess)
+    {
+        Debug.Log($"User logged in with ID: {userId}");
+    }
+    else
+    {
+        Debug.LogError("Login failed or cancelled.");
+    }
+}
+          </code></pre>
+
+                    <h3>Cancel Polling</h3>
+                    <pre><code>public void CancelLoginPolling()
+{
+    HKUApiWrapper.CancelPolling();
+}
+          </code></pre>
+
+                    <h3>Logout</h3>
+                    <pre><code>public void Logout()
+{
+    HKUApiWrapper.Logout(OnLogout, IntPtr.Zero);
+}
+
+private void OnLogout(bool isSuccess, IntPtr context)
+{
+    if (isSuccess)
+    {
+        Debug.Log("User logged out successfully.");
+    }
+    else
+    {
+        Debug.LogError("Logout failed.");
+    }
+}
+          </code></pre>
+                </section>
+
+                <section>
+                    <h2 id="user-data">User Data</h2>
+                    <h3>Get User Information</h3>
+                    <pre><code>public void GetUser(string userId)
+{
+    HKUApiWrapper.GetUser(userId, OnGetUser, IntPtr.Zero);
+}
+
+private void OnGetUser(IntPtr username, int length, IntPtr context)
+{
+    string userName = Marshal.PtrToStringAnsi(username);
+    Debug.Log($"Username: {userName}");
+}
+          </code></pre>
+
+                    <h3>Get All Users</h3>
+                    <pre><code>public void GetUsers()
+{
+    HKUApiWrapper.GetUsers(OnGetUsers, IntPtr.Zero);
+}
+
+private void OnGetUsers(IntPtr usersPtr, int length, IntPtr context)
+{
+    string[] users = new string[length];
+    IntPtr[] userPtrs = new IntPtr[length];
+    Marshal.Copy(usersPtr, userPtrs, 0, length);
+
+    for (int i = 0; i &lt; length; i++)
+    {
+        users[i] = Marshal.PtrToStringAnsi(userPtrs[i]);
     }
 
-    public void OnLogoutButtonClicked()
-    {
-        // Log out the current user
-        hku.Logoff((isSuccess) => {
-            if (isSuccess)
-            {
-                Debug.Log("Logged out successfully");
-                // Update your UI or game state accordingly
-            }
-            else
-            {
-                Debug.Log("Logout failed");
-            }
-        });
-    }
+    Debug.Log("Users: " + string.Join(", ", users));
+}
+          </code></pre>
+                </section>
 
-    public void OnUploadScoreButtonClicked(int score)
-    {
-        // Upload a score to a specific leaderboard
-        hku.UploadScore("LeaderboardID", score, (isSuccess, rank) => {
-            if (isSuccess)
-            {
-                Debug.Log("Score uploaded successfully, current rank: " + rank);
-                // Update your UI or game state accordingly
-            }
-            else
-            {
-                Debug.Log("Failed to upload score");
-            }
-        });
-    }
+                <section>
+                    <h2 id="leaderboards">Leaderboards</h2>
+                    <h3>Get Leaderboards for Project</h3>
+                    <pre><code>public void GetLeaderboardsForProject()
+{
+    HKUApiWrapper.GetLeaderboardsForProject(OnGetLeaderboards, IntPtr.Zero);
+}
 
-    public void OnFetchLeaderboardsButtonClicked()
+private void OnGetLeaderboards(bool isSuccess, IntPtr context)
+{
+    if (isSuccess)
     {
-        // Fetch the list of leaderboards for the project
-        hku.GetLeaderboards((leaderboards) => {
-            if (leaderboards != null)
-            {
-                foreach (var leaderboard in leaderboards)
-                {
-                    Debug.Log("Leaderboard: " + leaderboard.name + " - ID: " + leaderboard.id);
-                }
-            }
-            else
-            {
-                Debug.Log("Failed to fetch leaderboards");
-            }
-        });
+        Debug.Log("Leaderboards fetched successfully.");
     }
+    else
+    {
+        Debug.LogError("Failed to fetch leaderboards.");
+    }
+}
+          </code></pre>
 
-    public void OnFetchLeaderboardEntriesButtonClicked()
+                    <h3>Get Leaderboard Entries</h3>
+                    <pre><code>public void GetLeaderboard(string leaderboardId, int amount, HKUApiWrapper.GetEntryOptions option)
+{
+    IntPtr outArray = IntPtr.Zero;
+    HKUApiWrapper.GetLeaderboard(leaderboardId, ref outArray, amount, option, OnGetLeaderboard, IntPtr.Zero);
+}
+
+private void OnGetLeaderboard(bool isSuccess, IntPtr context)
+{
+    if (isSuccess)
     {
-        // Fetch entries for a specific leaderboard
-        hku.GetLeaderboardEntries("LeaderboardID", 10, HKUApiWrapper.GetEntryOptions.Highest, (entries) => {
-            if (entries != null)
-            {
-                foreach (var entry in entries)
-                {
-                    Debug.Log("Rank: " + entry.Rank + ", PlayerID: " + entry.PlayerID + ", Score: " + entry.Score);
-                }
-            }
-            else
-            {
-                Debug.Log("Failed to fetch leaderboard entries");
-            }
-        });
+        Debug.Log("Leaderboard entries fetched successfully.");
     }
-}</code></pre>
-            </section>
+    else
+    {
+        Debug.LogError("Failed to fetch leaderboard entries.");
+    }
+}
+          </code></pre>
+
+                    <h3>Upload Leaderboard Score</h3>
+                    <pre><code>public void UploadScore(string leaderboardId, int score)
+{
+    HKUApiWrapper.UploadLeaderboardScore(leaderboardId, score, OnUploadScore, IntPtr.Zero);
+}
+
+private void OnUploadScore(bool isSuccess, int currentRank, IntPtr context)
+{
+    if (isSuccess)
+    {
+        Debug.Log($"Score uploaded successfully! Current Rank: {currentRank}");
+    }
+    else
+    {
+        Debug.LogError("Failed to upload score.");
+    }
+}
+          </code></pre>
+                </section>
+
+                <section>
+                    <h2 id="debugging">Debugging</h2>
+                    <h3>Set Debug Output Callback</h3>
+                    <pre><code>public void SetDebugOutput()
+{
+    HKUApiWrapper.SetOutputCallback(OnDebugOutput, IntPtr.Zero);
+}
+
+private void OnDebugOutput(string message, IntPtr context)
+{
+    Debug.Log($"Debug: {message}");
+}
+          </code></pre>
+                </section>
+            </div>
+            <!-- Your existing content ends here -->
         </div>
     </div>
 </template>
-
-<script>
-    export default {
-        name: 'IntegrationGuide'
-    }
-</script>
-
 <style scoped>
     .container {
-        display: flex;
-        height: 100vh;
-        width: 100%;
+        display: flow;
     }
 
     .sidebar {
-        width: 250px;
-        padding: 20px;
+        width: 200px;
         background-color: #333;
         color: #fff;
-        border-right: 1px solid #ddd;
+        padding: 20px;
+        height: 100vh;
         position: fixed;
-        height: 100%;
-        overflow-y: auto;
     }
 
-        .sidebar ul {
+        .sidebar nav ul {
             list-style: none;
             padding: 0;
         }
 
-            .sidebar ul li {
-                margin-bottom: 10px;
+            .sidebar nav ul li {
+                margin: 10px 0;
             }
 
-                .sidebar ul li a {
-                    text-decoration: none;
+                .sidebar nav ul li a {
                     color: #fff;
+                    text-decoration: none;
                 }
 
-                    .sidebar ul li a:hover {
+                    .sidebar nav ul li a:hover {
                         text-decoration: underline;
                     }
 
-    .content {
-        flex: 1;
-        margin-left: 250px;
+    .guide-content {
+        margin-left: 220px;
         padding: 20px;
-        overflow-y: auto;
-        background-color: #f5f5f5;
-        height: 100vh;
+        flex-grow: 1;
+    }
+
+    .guide {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
         color: #333;
+        background-color: #f9f9f9;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
 
-        .content ul li{
-            color: #333;
-        }
-
-    section {
-        margin-bottom: 40px;
-    }
-
-    h2, h3 {
-        color: #333;
-    }
-
-    code {
-        background-color: #e8e8e8;
-        padding: 5px;
-        border-radius: 3px;
-        color: #000;
+    h1, h2, h3 {
+        color: #007acc;
     }
 
     pre {
-        background-color: #e8e8e8;
+        background: #eef;
         padding: 10px;
+        border-radius: 5px;
+        overflow: auto;
+    }
+
+    code {
+        font-family: 'Courier New', Courier, monospace;
+        background: #f4f4f4;
+        padding: 2px 4px;
         border-radius: 3px;
-        overflow-x: auto;
-        white-space: pre-wrap;
-        word-wrap: break-word;
+    }
+
+    ol {
+        padding-left: 20px;
     }
 </style>

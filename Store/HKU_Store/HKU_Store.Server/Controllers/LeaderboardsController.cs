@@ -43,11 +43,16 @@ public class LeaderboardsController : ControllerBase
 	[HttpPost("addentry/{leaderboardId}")]
 	public async Task<IActionResult> AddEntryToLeaderboard(string leaderboardId, [FromBody] AppLeaderboard entry)
 	{
+		if (entry == null)
+			return BadRequest("Entry cannot be null.");
+
 		var leaderboardInfo = await _context.AppLeaderboardsInfo.FindAsync(leaderboardId);
 		if (leaderboardInfo == null)
 			return NotFound("Leaderboard not found.");
 
 		var connection = _context.Database.GetDbConnection();
+		if (connection == null)
+			return StatusCode(500, "Database connection is not available.");
 
 		try
 		{
@@ -57,7 +62,12 @@ public class LeaderboardsController : ControllerBase
 				command.CommandText = $"SELECT Score FROM `Leaderboard_{leaderboardId}` WHERE PlayerID = @PlayerID";
 				command.Parameters.Add(new SqliteParameter("@PlayerID", entry.PlayerID));
 				var currentScoreObj = await command.ExecuteScalarAsync();
-				int? currentScore = currentScoreObj != DBNull.Value ? (int?)(long)currentScoreObj : null;
+
+				int? currentScore = null;
+				if (currentScoreObj != null && currentScoreObj != DBNull.Value)
+				{
+					currentScore = Convert.ToInt32(currentScoreObj);
+				}
 
 				bool shouldUpdate = currentScore == null ||
 									(leaderboardInfo.SortMethod == ESortMethod.Descending && entry.Score > currentScore) ||
@@ -82,17 +92,27 @@ public class LeaderboardsController : ControllerBase
 				command.CommandText = $"SELECT COUNT(*) FROM `Leaderboard_{leaderboardId}` WHERE Score {(leaderboardInfo.SortMethod == ESortMethod.Descending ? ">" : "<")} @Score";
 				command.Parameters.Clear();
 				command.Parameters.Add(new SqliteParameter("@Score", entry.Score));
-				var rank = 1 + Convert.ToInt32(await command.ExecuteScalarAsync());
+				var rankCount = await command.ExecuteScalarAsync();
+				var rank = 1 + Convert.ToInt32(rankCount);
 
 				return Ok(new { Message = "Entry added successfully.", Rank = rank });
 			}
 		}
+		catch (Exception ex)
+		{
+			// Log the exception (if you have a logging framework)
+			// _logger.LogError(ex, "An error occurred while adding an entry to the leaderboard.");
+
+			return StatusCode(500, $"An error occurred: {ex.Message}");
+		}
 		finally
 		{
-			await connection.CloseAsync();
+			if (connection != null && connection.State == System.Data.ConnectionState.Open)
+			{
+				await connection.CloseAsync();
+			}
 		}
 	}
-
 
 	// Update leaderboard configuration
 	[HttpPut("update/{leaderboardId}")]

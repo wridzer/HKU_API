@@ -18,202 +18,237 @@
                 <h1 id="setup">Using the HKU API Wrapper in Unity</h1>
                 <section>
                     <h2>Setup</h2>
-                    <h3>Step 1: Importing the DLL and Wrapper</h3>
+                    <h3>Step-by-Step Guide</h3>
                     <ol>
-                        <li>Place the <code>HKUApiWrapper.dll</code> file into the <code>Assets/Plugins</code> folder of your Unity project.</li>
-                        <li>Ensure the <code>HKUApiWrapper.cs</code> script is also included in your project.</li>
+                        <li>
+                            Create an Account
+                            <p>Register for an account on the necessary platform.</p>
+                        </li>
+                        <li>
+                            Create a Project
+                            <p>Set up a new project on the platform and obtain the `Project ID`.</p>
+                        </li>
+                        <li>
+                            Configure Project
+                            <p>Ensure your project settings are configured correctly on the platform.</p>
+                        </li>
+                        <li>
+                            Download Files
+                            <p>Download the necessary files, including the DLL and the `HKUApiWrapper.cs`.</p>
+                        </li>
+                        <li>
+                            Add .dll to Plugins
+                            <p>Place the DLL file into the `Plugins` folder within your Unity project.</p>
+                        </li>
+                        <li>
+                            Add Wrapper to Project
+                            <p>Include the `HKUApiWrapper.cs` script in your Unity project.</p>
+                        </li>
                     </ol>
                 </section>
+
                 <section>
                     <h2 id="configuration">Configuration</h2>
                     <h3>Configure the Project</h3>
-                    <p>Before calling any other functions, you need to configure the project with your Project ID.</p>
-                    <pre><code>using HKU;
+                    <p>Next, configure the project so the DLL knows which project this is. Update `YOU_PROJECT_ID_HERE` with your actual project ID.</p>
+                    <pre><code>using static HKU.HKUApiWrapper;
 using System;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
-public class Example : MonoBehaviour
+public class HKU_Implementation : MonoBehaviour
 {
-    private void Start()
-    {
-        ConfigureProject("YourProjectID", OnConfigureProject);
-    }
+    private GCHandle gch;
+    private IntPtr contextPtr = IntPtr.Zero;
+    private bool isConfigured = false;
+    private string projectID = "YOU_PROJECT_ID_HERE";
 
-    private void ConfigureProject(string projectId, Action&lt;bool&gt; callback)
+    public void Initialize()
     {
-        HKUApiWrapper.ConfigureProject(projectId, (isSuccess, context) =&gt;
-        {
-            callback(isSuccess);
-        }, IntPtr.Zero);
-    }
+        // Context for callbacks
+        gch = GCHandle.Alloc(this);
+        contextPtr = GCHandle.ToIntPtr(gch);
 
-    private void OnConfigureProject(bool isSuccess)
-    {
-        if (isSuccess)
+        // Set debug output
+#if DEVELOPMENT_BUILD
+        DebugOutputDelegate myDebugOutputDelegate = (message, context) =>
         {
-            Debug.Log("Project configured successfully.");
-        }
-        else
+            Debug.Log(message);
+        };
+        SetOutputCallback(myDebugOutputDelegate, IntPtr.Zero);
+#endif
+
+        // Register project
+        ConfigureProjectCallbackDelegate myConfigureProjectCallbackDelegate = (bool IsSuccess, IntPtr context) =>
         {
-            Debug.LogError("Failed to configure project.");
-        }
+            if (IsSuccess)
+            {
+                Debug.Log("Project configured successfully");
+                isConfigured = true;
+            }
+            else
+            {
+                Debug.Log("Project configuration failed");
+            }
+        };
+        ConfigureProject(projectID, myConfigureProjectCallbackDelegate, IntPtr.Zero);
     }
 }
-          </code></pre>
+</code></pre>
                 </section>
 
                 <section>
                     <h2 id="authentication">User Authentication</h2>
-                    <h3>Open Login Page</h3>
-                    <p>To authenticate users, you need to open the login page in the browser.</p>
-                    <pre><code>public void OpenLogin()
-{
-    HKUApiWrapper.OpenLoginPage();
-}
-          </code></pre>
+                    <h3>Login Process</h3>
+                    <p>The login process involves opening the login page, starting the polling process, and optionally stopping the polling process.</p>
+                    <pre><code>using static HKU.HKUApiWrapper;
+using System;
+using System.Runtime.InteropServices;
+using UnityEngine;
 
-                    <h3>Start Polling for Login Status</h3>
-                    <pre><code>public void StartLoginPolling()
+public class HKU_Implementation : MonoBehaviour
 {
-    HKUApiWrapper.StartPolling(OnLoginStatus, IntPtr.Zero);
-}
+    private GCHandle gch;
+    private IntPtr contextPtr = IntPtr.Zero;
+    private bool isConfigured = false;
+    private string projectID = "YOU_PROJECT_ID_HERE";
 
-private void OnLoginStatus(bool isSuccess, string userId, IntPtr context)
-{
-    if (isSuccess)
+    public void Initialize()
     {
-        Debug.Log($"User logged in with ID: {userId}");
-    }
-    else
-    {
-        Debug.LogError("Login failed or cancelled.");
-    }
-}
-          </code></pre>
+        // Context for callbacks
+        gch = GCHandle.Alloc(this);
+        contextPtr = GCHandle.ToIntPtr(gch);
 
-                    <h3>Cancel Polling</h3>
-                    <pre><code>public void CancelLoginPolling()
-{
-    HKUApiWrapper.CancelPolling();
-}
-          </code></pre>
+        // Set debug output
+#if DEVELOPMENT_BUILD
+        DebugOutputDelegate myDebugOutputDelegate = (message, context) =>
+        {
+            Debug.Log(message);
+        };
+        SetOutputCallback(myDebugOutputDelegate, IntPtr.Zero);
+#endif
 
-                    <h3>Logout</h3>
-                    <pre><code>public void Logout()
-{
-    HKUApiWrapper.Logout(OnLogout, IntPtr.Zero);
-}
+        // Register project
+        ConfigureProjectCallbackDelegate myConfigureProjectCallbackDelegate = (bool IsSuccess, IntPtr context) =>
+        {
+            if (IsSuccess)
+            {
+                Debug.Log("Project configured successfully");
+                isConfigured = true;
+            }
+            else
+            {
+                Debug.Log("Project configuration failed");
+            }
+        };
+        ConfigureProject(projectID, myConfigureProjectCallbackDelegate, IntPtr.Zero);
+    }
 
-private void OnLogout(bool isSuccess, IntPtr context)
-{
-    if (isSuccess)
+    public void StartLoginProcess()
     {
-        Debug.Log("User logged out successfully.");
+        if (!isConfigured)
+        {
+            Debug.LogError("Project is not configured. Please configure the project before starting the login process.");
+            return;
+        }
+
+        // Open login page
+        OpenLoginPage();
+
+        // Start polling
+        StartPollingProcess();
     }
-    else
+
+    private void StartPollingProcess()
     {
-        Debug.LogError("Logout failed.");
+        LoginStatusCallbackDelegate myLoginStatusCallbackDelegate = (bool IsSuccess, string userId, IntPtr context) =>
+        {
+            if (IsSuccess)
+            {
+                Debug.Log("User logged in successfully with ID: " + userId);
+            }
+            else
+            {
+                Debug.Log("User login failed");
+            }
+        };
+        StartPolling(myLoginStatusCallbackDelegate, contextPtr);
     }
-}
-          </code></pre>
+
+    public void StopPollingProcess()
+    {
+        CancelPolling();
+        Debug.Log("Polling stopped");
+    }
+
+    private void OnDestroy()
+    {
+        if (gch.IsAllocated)
+        {
+            gch.Free();
+        }
+    }
+}</code></pre>
                 </section>
 
                 <section>
                     <h2 id="user-data">User Data</h2>
-                    <h3>Get User Information</h3>
-                    <pre><code>public void GetUser(string userId)
+                    <h3>Fetching Users</h3>
+                    <pre><code>public void FetchUsers()
 {
-    HKUApiWrapper.GetUser(userId, OnGetUser, IntPtr.Zero);
-}
-
-private void OnGetUser(IntPtr username, int length, IntPtr context)
-{
-    string userName = Marshal.PtrToStringAnsi(username);
-    Debug.Log($"Username: {userName}");
-}
-          </code></pre>
-
-                    <h3>Get All Users</h3>
-                    <pre><code>public void GetUsers()
-{
-    HKUApiWrapper.GetUsers(OnGetUsers, IntPtr.Zero);
-}
-
-private void OnGetUsers(IntPtr usersPtr, int length, IntPtr context)
-{
-    string[] users = new string[length];
-    IntPtr[] userPtrs = new IntPtr[length];
-    Marshal.Copy(usersPtr, userPtrs, 0, length);
-
-    for (int i = 0; i &lt; length; i++)
+    UsersCallbackDelegate myUsersCallbackDelegate = (IntPtr users, int length, IntPtr context) =>
     {
-        users[i] = Marshal.PtrToStringAnsi(userPtrs[i]);
-    }
-
-    Debug.Log("Users: " + string.Join(", ", users));
-}
-          </code></pre>
+        for (int i = 0; i < length; i++)
+        {
+            IntPtr userPtr = Marshal.ReadIntPtr(users, i * IntPtr.Size);
+            string user = Marshal.PtrToStringAnsi &#8203;:citation[oaicite:0]{index=0}&#8203;
+                                    (userPtr);
+            Debug.Log("User: " + user);
+        }
+    };
+    GetUsers(myUsersCallbackDelegate, contextPtr);
+}</code></pre>
                 </section>
 
                 <section>
                     <h2 id="leaderboards">Leaderboards</h2>
-                    <h3>Get Leaderboards for Project</h3>
-                    <pre><code>public void GetLeaderboardsForProject()
-{
-    HKUApiWrapper.GetLeaderboardsForProject(OnGetLeaderboards, IntPtr.Zero);
-}
-
-private void OnGetLeaderboards(bool isSuccess, IntPtr context)
-{
-    if (isSuccess)
-    {
-        Debug.Log("Leaderboards fetched successfully.");
-    }
-    else
-    {
-        Debug.LogError("Failed to fetch leaderboards.");
-    }
-}
-          </code></pre>
-
-                    <h3>Get Leaderboard Entries</h3>
-                    <pre><code>public void GetLeaderboard(string leaderboardId, int amount, HKUApiWrapper.GetEntryOptions option)
-{
-    IntPtr outArray = IntPtr.Zero;
-    HKUApiWrapper.GetLeaderboard(leaderboardId, ref outArray, amount, option, OnGetLeaderboard, IntPtr.Zero);
-}
-
-private void OnGetLeaderboard(bool isSuccess, IntPtr context)
-{
-    if (isSuccess)
-    {
-        Debug.Log("Leaderboard entries fetched successfully.");
-    }
-    else
-    {
-        Debug.LogError("Failed to fetch leaderboard entries.");
-    }
-}
-          </code></pre>
-
-                    <h3>Upload Leaderboard Score</h3>
+                    <h3>Uploading Leaderboard Scores</h3>
                     <pre><code>public void UploadScore(string leaderboardId, int score)
 {
-    HKUApiWrapper.UploadLeaderboardScore(leaderboardId, score, OnUploadScore, IntPtr.Zero);
-}
+    UploadLeaderboardScoreCallbackDelegate myUploadScoreCallbackDelegate = (bool IsSuccess, int currentRank, IntPtr context) =>
+    {
+        if (IsSuccess)
+        {
+            Debug.Log("Score uploaded successfully. Current Rank: " + currentRank);
+        }
+        else
+        {
+            Debug.Log("Failed to upload score");
+        }
+    };
+    UploadLeaderboardScore(leaderboardId, score, myUploadScoreCallbackDelegate, contextPtr);
+}</code></pre>
 
-private void OnUploadScore(bool isSuccess, int currentRank, IntPtr context)
+                    <h3>Fetching Leaderboard</h3>
+                    <pre><code>public void FetchLeaderboard(string leaderboardId, int amount, GetEntryOptions option)
 {
-    if (isSuccess)
+    LeaderboardCallbackDelegate myLeaderboardCallbackDelegate = (bool isSuccess, IntPtr context) =>
     {
-        Debug.Log($"Score uploaded successfully! Current Rank: {currentRank}");
-    }
-    else
-    {
-        Debug.LogError("Failed to upload score.");
-    }
-}
-          </code></pre>
+        if (isSuccess)
+        {
+            Debug.Log("Leaderboard fetched successfully");
+        }
+        else
+        {
+            Debug.Log("Failed to fetch leaderboard");
+        }
+    };
+
+    IntPtr outArray = IntPtr.Zero;
+    GetLeaderboard(leaderboardId, ref outArray, amount, option, myLeaderboardCallbackDelegate, contextPtr);
+    // Don't forget to free the memory
+    FreeMemory(outArray);
+}</code></pre>
                 </section>
 
                 <section>
@@ -227,14 +262,156 @@ private void OnUploadScore(bool isSuccess, int currentRank, IntPtr context)
 private void OnDebugOutput(string message, IntPtr context)
 {
     Debug.Log($"Debug: {message}");
-}
-          </code></pre>
+}</code></pre>
+                </section>
+
+                <section>
+                    <h2>Full Example Class</h2>
+                    <pre><code>using static HKU.HKUApiWrapper;
+using System;
+using System.Runtime.InteropServices;
+using UnityEngine;
+
+public class HKU_Implementation : MonoBehaviour
+{
+    private GCHandle gch;
+    private IntPtr contextPtr = IntPtr.Zero;
+    private bool isConfigured = false;
+    private string projectID = "YOU_PROJECT_ID_HERE";
+
+    public void Initialize()
+    {
+        // Context for callbacks
+        gch = GCHandle.Alloc(this);
+        contextPtr = GCHandle.ToIntPtr(gch);
+
+        // Set debug output
+#if DEVELOPMENT_BUILD
+        DebugOutputDelegate myDebugOutputDelegate = (message, context) =>
+        {
+            Debug.Log(message);
+        };
+        SetOutputCallback(myDebugOutputDelegate, IntPtr.Zero);
+#endif
+
+        // Register project
+        ConfigureProjectCallbackDelegate myConfigureProjectCallbackDelegate = (bool IsSuccess, IntPtr context) =>
+        {
+            if (IsSuccess)
+            {
+                Debug.Log("Project configured successfully");
+                isConfigured = true;
+            }
+            else
+            {
+                Debug.Log("Project configuration failed");
+            }
+        };
+        ConfigureProject(projectID, myConfigureProjectCallbackDelegate, IntPtr.Zero);
+    }
+
+    public void StartLoginProcess()
+    {
+        if (!isConfigured)
+        {
+            Debug.LogError("Project is not configured. Please configure the project before starting the login process.");
+            return;
+        }
+
+        // Open login page
+        OpenLoginPage();
+
+        // Start polling
+        StartPollingProcess();
+    }
+
+    private void StartPollingProcess()
+    {
+        LoginStatusCallbackDelegate myLoginStatusCallbackDelegate = (bool IsSuccess, string userId, IntPtr context) =>
+        {
+            if (IsSuccess)
+            {
+                Debug.Log("User logged in successfully with ID: " + userId);
+            }
+            else
+            {
+                Debug.Log("User login failed");
+            }
+        };
+        StartPolling(myLoginStatusCallbackDelegate, contextPtr);
+    }
+
+    public void StopPollingProcess()
+    {
+        CancelPolling();
+        Debug.Log("Polling stopped");
+    }
+
+    public void FetchUsers()
+    {
+        UsersCallbackDelegate myUsersCallbackDelegate = (IntPtr users, int length, IntPtr context) =>
+        {
+            for (int i = 0; i < length; i++)
+            {
+                IntPtr userPtr = Marshal.ReadIntPtr(users, i * IntPtr.Size);
+                string user = Marshal.PtrToStringAnsi(userPtr);
+                Debug.Log("User: " + user);
+            }
+        };
+        GetUsers(myUsersCallbackDelegate, contextPtr);
+    }
+
+    public void UploadScore(string leaderboardId, int score)
+    {
+        UploadLeaderboardScoreCallbackDelegate myUploadScoreCallbackDelegate = (bool IsSuccess, int currentRank, IntPtr context) =>
+        {
+            if (IsSuccess)
+            {
+                Debug.Log("Score uploaded successfully. Current Rank: " + currentRank);
+            }
+            else
+            {
+                Debug.Log("Failed to upload score");
+            }
+        };
+        UploadLeaderboardScore(leaderboardId, score, myUploadScoreCallbackDelegate, contextPtr);
+    }
+
+    public void FetchLeaderboard(string leaderboardId, int amount, GetEntryOptions option)
+    {
+        LeaderboardCallbackDelegate myLeaderboardCallbackDelegate = (bool isSuccess, IntPtr context) =>
+        {
+            if (isSuccess)
+            {
+                Debug.Log("Leaderboard fetched successfully");
+            }
+            else
+            {
+                Debug.Log("Failed to fetch leaderboard");
+            }
+        };
+
+        IntPtr outArray = IntPtr.Zero;
+        GetLeaderboard(leaderboardId, ref outArray, amount, option, myLeaderboardCallbackDelegate, contextPtr);
+        // Don't forget to free the memory
+        FreeMemory(outArray);
+    }
+
+    private void OnDestroy()
+    {
+        if (gch.IsAllocated)
+        {
+            gch.Free();
+        }
+    }
+}</code></pre>
                 </section>
             </div>
             <!-- Your existing content ends here -->
         </div>
     </div>
 </template>
+
 <style scoped>
     .container {
         display: flow;

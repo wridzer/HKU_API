@@ -59,7 +59,7 @@ public class ProjectsController : ControllerBase
         await _context.SaveChangesAsync();
 
         // Ensure 'GetProject' action is correctly referenced and id is passed properly
-        return CreatedAtAction(nameof(GetProject), new { id = project.ID }, project);
+        return Ok(new { id = project.ID });
     }
 
     // PUT: api/projects/{id}

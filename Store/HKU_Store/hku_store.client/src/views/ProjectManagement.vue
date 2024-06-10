@@ -40,7 +40,7 @@
                     <li>
                         <input v-model="newLeaderboard.name" type="text" placeholder="Leaderboard Name" />
                     </li>
-                    <li >
+                    <li>
                         <input v-model="newLeaderboard.description" type="text" placeholder="Description" />
                     </li>
                     <li>
@@ -63,7 +63,7 @@
             </div>
 
             <!-- List Existing Leaderboards -->
-            <h2>Existing Leaderboards</h2>
+            <h2 v-if="leaderboards.length">Existing Leaderboards</h2>
             <ul>
                 <li v-for="leaderboard in leaderboards" :key="leaderboard.id">
                     <div class="leaderboard_list_item">
@@ -82,6 +82,16 @@
 
         <!-- Button to return to dashboard -->
         <button @click="gotoDashboard">Return to Dashboard</button>
+
+        <!-- Button to delete project -->
+        <button @click="confirmDeleteProject">Delete Project</button>
+
+        <!-- Confirmation Dialog -->
+        <div v-if="showDeleteConfirmation" class="confirmation-dialog">
+            <p>Are you sure you want to delete this project?</p>
+            <button @click="deleteProject">Yes, delete it</button>
+            <button @click="cancelDeleteProject">Cancel</button>
+        </div>
     </div>
 </template>
 
@@ -107,7 +117,8 @@
                     description: '',
                     sortMethod: 'None',
                     displayType: 'None'
-                }
+                },
+                showDeleteConfirmation: false
             };
         },
         created() {
@@ -182,6 +193,26 @@
                     })
                     .catch(error => console.error('Failed to delete leaderboard:', error));
             },
+            confirmDeleteProject() {
+                this.showDeleteConfirmation = true;
+            },
+            cancelDeleteProject() {
+                this.showDeleteConfirmation = false;
+            },
+            async deleteProject() {
+                const projectId = this.$route.params.id;
+                try {
+                    const response = await fetch(`/api/projects/${projectId}`, {
+                        method: 'DELETE'
+                    });
+                    if (!response.ok) {
+                        throw new Error('Failed to delete project');
+                    }
+                    this.$router.push({ name: 'Dashboard' }); // Redirect to Dashboard or another page
+                } catch (error) {
+                    console.error('Error deleting project:', error);
+                }
+            }
         }
     };
 </script>
@@ -414,4 +445,19 @@
         background-color: #0056b3;
     }
 
+
+    .confirmation-dialog {
+        margin-top: 20px;
+        padding: 10px;
+        border: 1px solid #fe1f4c;
+        background-color: #3e3e3e;
+    }
+
+        .confirmation-dialog p {
+            margin-bottom: 10px;
+        }
+
+        .confirmation-dialog button {
+            margin-right: 10px;
+        }
 </style>

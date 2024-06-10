@@ -17,7 +17,7 @@
             <input type="text" v-model="newContributorUsername" placeholder="Add Contributor by Username" @keyup.enter="addContributorByUsername" />
         </label>
         <label>
-            <button @click="submitProject">Create Project</button>
+            <button @click="createProject">Create Project</button>
         </label>
     </div>
 </template>
@@ -70,20 +70,24 @@
                     })
                     .catch(error => console.error('Error adding contributor:', error));
             },
-            submitProject() {
-                axios.post('/api/projects', this.project, {
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                    .then(response => {
-                        alert('Project created successfully!')
-                        router.Post('/Dashboard')
-                    })
-                    .catch(error => {
-                        console.error('Failed to create project:', error.response.data);
-                        alert('Failed to create project. Error: ' + error.response.data.title);
+            async createProject() {
+                try {
+                    const response = await fetch('/api/projects', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(this.project)
                     });
+                    if (!response.ok) {
+                        throw new Error('Failed to create project');
+                    }
+                    const data = await response.json();
+                    // Navigate to the project management page
+                    this.$router.push({ name: 'ProjectManagement', params: { id: data.id } });
+                } catch (error) {
+                    console.error('Error creating project:', error);
+                }
             }
         }
     };

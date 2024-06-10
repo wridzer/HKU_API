@@ -40,61 +40,82 @@ public class LeaderboardsController : ControllerBase
         }
     }
 
-    [HttpPost("addentry/{leaderboardId}")]
-    public async Task<IActionResult> AddEntryToLeaderboard(string leaderboardId, [FromBody] AppLeaderboard entry)
-    {
-        var leaderboardInfo = await _context.AppLeaderboardsInfo.FindAsync(leaderboardId);
-        if (leaderboardInfo == null)
-            return NotFound("Leaderboard not found.");
+	[HttpPost("addentry/{leaderboardId}")]
+	public async Task<IActionResult> AddEntryToLeaderboard(string leaderboardId, [FromBody] AppLeaderboard entry)
+	{
+		if (entry == null)
+			return BadRequest("Entry cannot be null.");
 
-        var connection = _context.Database.GetDbConnection();
+		var leaderboardInfo = await _context.AppLeaderboardsInfo.FindAsync(leaderboardId);
+		if (leaderboardInfo == null)
+			return NotFound("Leaderboard not found.");
 
-        try
-        {
-            await connection.OpenAsync();
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = $"SELECT Score FROM `Leaderboard_{leaderboardId}` WHERE PlayerID = @PlayerID";
-                command.Parameters.Add(new SqliteParameter("@PlayerID", entry.PlayerID));
-                var currentScoreObj = await command.ExecuteScalarAsync();
-                int? currentScore = currentScoreObj != DBNull.Value ? (int?)(long)currentScoreObj : null;
+		var connection = _context.Database.GetDbConnection();
+		if (connection == null)
+			return StatusCode(500, "Database connection is not available.");
 
-                bool shouldUpdate = currentScore == null ||
-                                    (leaderboardInfo.SortMethod == ESortMethod.Descending && entry.Score > currentScore) ||
-                                    (leaderboardInfo.SortMethod == ESortMethod.Ascending && entry.Score < currentScore);
+		try
+		{
+			await connection.OpenAsync();
+			using (var command = connection.CreateCommand())
+			{
+				command.CommandText = $"SELECT Score FROM `Leaderboard_{leaderboardId}` WHERE PlayerID = @PlayerID";
+				command.Parameters.Add(new SqliteParameter("@PlayerID", entry.PlayerID));
+				var currentScoreObj = await command.ExecuteScalarAsync();
 
-                if (shouldUpdate)
-                {
-                    if (currentScore == null)
-                    {
-                        command.CommandText = $"INSERT INTO `Leaderboard_{leaderboardId}` (PlayerID, Score) VALUES (@PlayerID, @Score)";
-                    }
-                    else
-                    {
-                        command.CommandText = $"UPDATE `Leaderboard_{leaderboardId}` SET Score = @Score WHERE PlayerID = @PlayerID";
-                    }
-                    command.Parameters.Clear();
-                    command.Parameters.Add(new SqliteParameter("@PlayerID", entry.PlayerID));
-                    command.Parameters.Add(new SqliteParameter("@Score", entry.Score));
-                    await command.ExecuteNonQueryAsync();
-                }
+				int? currentScore = null;
+				if (currentScoreObj != null && currentScoreObj != DBNull.Value)
+				{
+					currentScore = Convert.ToInt32(currentScoreObj);
+				}
 
-                command.CommandText = $"SELECT COUNT(*) FROM `Leaderboard_{leaderboardId}` WHERE Score {(leaderboardInfo.SortMethod == ESortMethod.Descending ? ">" : "<")} @Score";
-                command.Parameters.Clear();
-                command.Parameters.Add(new SqliteParameter("@Score", entry.Score));
-                var rank = 1 + Convert.ToInt32(await command.ExecuteScalarAsync());
+				bool shouldUpdate = currentScore == null ||
+									(leaderboardInfo.SortMethod == ESortMethod.Descending && entry.Score > currentScore) ||
+									(leaderboardInfo.SortMethod == ESortMethod.Ascending && entry.Score < currentScore);
 
-                return Ok(new { Message = "Entry added successfully.", Rank = rank });
-            }
-        }
-        finally
-        {
-            await connection.CloseAsync();
-        }
-    }
+				if (shouldUpdate)
+				{
+					if (currentScore == null)
+					{
+						command.CommandText = $"INSERT INTO `Leaderboard_{leaderboardId}` (PlayerID, Score) VALUES (@PlayerID, @Score)";
+					}
+					else
+					{
+						command.CommandText = $"UPDATE `Leaderboard_{leaderboardId}` SET Score = @Score WHERE PlayerID = @PlayerID";
+					}
+					command.Parameters.Clear();
+					command.Parameters.Add(new SqliteParameter("@PlayerID", entry.PlayerID));
+					command.Parameters.Add(new SqliteParameter("@Score", entry.Score));
+					await command.ExecuteNonQueryAsync();
+				}
 
-    // Update leaderboard configuration
-    [HttpPut("update/{leaderboardId}")]
+				command.CommandText = $"SELECT COUNT(*) FROM `Leaderboard_{leaderboardId}` WHERE Score {(leaderboardInfo.SortMethod == ESortMethod.Descending ? ">" : "<")} @Score";
+				command.Parameters.Clear();
+				command.Parameters.Add(new SqliteParameter("@Score", entry.Score));
+				var rankCount = await command.ExecuteScalarAsync();
+				var rank = 1 + Convert.ToInt32(rankCount);
+
+				return Ok(new { Message = "Entry added successfully.", Rank = rank });
+			}
+		}
+		catch (Exception ex)
+		{
+			// Log the exception (if you have a logging framework)
+			// _logger.LogError(ex, "An error occurred while adding an entry to the leaderboard.");
+
+			return StatusCode(500, $"An error occurred: {ex.Message}");
+		}
+		finally
+		{
+			if (connection != null && connection.State == System.Data.ConnectionState.Open)
+			{
+				await connection.CloseAsync();
+			}
+		}
+	}
+
+	// Update leaderboard configuration
+	[HttpPut("update/{leaderboardId}")]
     public async Task<IActionResult> UpdateLeaderboard(string leaderboardId, [FromBody] AppLeaderboardInfo updatedInfo)
     {
         var existingInfo = await _context.AppLeaderboardsInfo.FindAsync(leaderboardId);

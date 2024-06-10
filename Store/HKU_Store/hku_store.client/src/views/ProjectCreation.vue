@@ -1,10 +1,24 @@
 <template>
     <div>
-        <input type="text" v-model="project.Name" placeholder="Project Name" />
-        <textarea v-model="project.Description" placeholder="Project Description"></textarea>
-        <input type="file" @change="handleFileUpload" />
-        <input type="text" v-model="newContributorUsername" placeholder="Add Contributor by Username" @keyup.enter="addContributorByUsername" />
-        <button @click="submitProject">Create Project</button>
+        <label>
+            <p>Project Name</p>
+            <input type="text" v-model="project.Name" placeholder="Project Name" />
+        </label>
+        <label>
+            <p>Project Description</p>
+            <textarea v-model="project.Description" placeholder="Project Description"></textarea>
+        </label>
+        <label>
+            <p>Project Image</p>
+            <input type="file" @change="handleFileUpload" />
+        </label>
+        <label>
+            <p>Add Contributors</p>
+            <input type="text" v-model="newContributorUsername" placeholder="Add Contributor by Username" @keyup.enter="addContributorByUsername" />
+        </label>
+        <label>
+            <button @click="submitProject">Create Project</button>
+        </label>
     </div>
 </template>
 
@@ -134,5 +148,31 @@
     .password-requirements {
         display: block;
         margin-bottom: 5px;
+    }
+
+    input {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 10px 15px;
+        transition: border-color 0.3s;
+        margin-left: 15px;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 10px 15px;
+        width: 50%;
+        transition: border-color 0.3s;
+        margin-left: 15px;
+    }
+
+    textarea {
+        border-color: #0056b3; /* Highlight focus state */
+    }
+
+    label {
+        display: block;
+        margin-bottom: 10px;
     }
 </style>

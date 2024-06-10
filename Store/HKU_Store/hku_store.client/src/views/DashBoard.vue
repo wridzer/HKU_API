@@ -13,6 +13,9 @@
                 </li>
             </ul>
         </div>
+        <div v-else-if="!isLoggedIn">
+            <p>You are not logged in. Please go to "Account" and create an account or log in.</p>
+        </div>
         <div v-else>
             <p>You have no projects. Click above to create one.</p>
         </div>

@@ -1,26 +1,36 @@
 <template>
     <div class="store">
-        <div class="project" v-for="project in projects" :key="project.ID">
+        <div class="project" v-for="project in projects" :key="project.id">
             <img :src="project.image" :alt="project.Name" class="project-image">
             <h2>{{ project.name }}</h2>
             <p>{{ project.description }}</p>
+            <button @click="navigateToProjectLeaderboards(project.id, project.name)">View Leaderboards</button>
         </div>
     </div>
 </template>
 
-<script setup>import { ref, onMounted } from 'vue';
-import axios from 'axios';
-
-const projects = ref([]);
-
-onMounted(async () => {
-  try {
-    const response = await axios.get('/api/projects');
-    projects.value = response.data;
-  } catch (error) {
-    console.error('Failed to fetch projects:', error);
-  }
-});</script>
+<script>
+    export default {
+        data() {
+            return {
+                projects: []
+            };
+        },
+        async created() {
+            try {
+                const response = await fetch('/api/projects');
+                this.projects = await response.json();
+            } catch (error) {
+                console.error('Error fetching projects:', error);
+            }
+        },
+        methods: {
+            navigateToProjectLeaderboards(projectId, projectName) {
+                this.$router.push({ name: 'LeaderboardPage', params: { projectId, projectName } });
+            }
+        }
+    };
+</script>
 
 <style>
     .store {
@@ -48,6 +58,17 @@ onMounted(async () => {
 
     h2, p {
         padding: 0 15px;
+    }
+
+    button {
+        padding: 5px 15px;
+        margin: 15px;
+        background-color: #fe1f4c;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
     }
 
 </style>

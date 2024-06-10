@@ -11,6 +11,7 @@ import Store from '../views/StorePage.vue';
 import UserList from '../views/UserList.vue';
 import Guide from '../views/Guide.vue';
 import DownloadPage from '../views/DownloadPage.vue';
+import LeaderboardPage from '../views/LeaderboardPage.vue';
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -68,6 +69,12 @@ const routes: Array<RouteRecordRaw> = [
         path: '/downloadpage',
         name: 'DownloadPage',
         component: DownloadPage
+    },
+    {
+        path: '/project/:projectId',
+        name: 'LeaderboardPage',
+        component: LeaderboardPage,
+        props: true
     }
 ];
 

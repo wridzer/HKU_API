@@ -445,7 +445,7 @@ public class HKU_Implementation : MonoBehaviour
                     }
 
     .guide-content {
-        margin-left: 220px;
+        margin-left: 180px;
         padding: 20px;
         flex-grow: 1;
     }
@@ -453,19 +453,27 @@ public class HKU_Implementation : MonoBehaviour
     .guide {
         font-family: Arial, sans-serif;
         line-height: 1.6;
-        color: #333;
-        background-color: #f9f9f9;
+        color: #f9f9f9;
+        background-color: #1e1e1e;
         border-radius: 10px;
         padding: 20px;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
 
-    h1, h2, h3 {
+    h1 {
+        color: #fe1f4c;
+    }
+    
+    h2 {
         color: #007acc;
     }
 
+    h3 {
+        color: #3093e5;
+    }
+
     pre {
-        background: #eef;
+        background: #333333;
         padding: 10px;
         border-radius: 5px;
         overflow: auto;
@@ -473,7 +481,6 @@ public class HKU_Implementation : MonoBehaviour
 
     code {
         font-family: 'Courier New', Courier, monospace;
-        background: #f4f4f4;
         padding: 2px 4px;
         border-radius: 3px;
     }

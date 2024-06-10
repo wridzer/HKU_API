@@ -1,6 +1,6 @@
 <template>
     <div class="sidebar">
-        <h1 class="sidebar-header">Menu</h1>
+        <img src="/favicon3.png" alt="Waterdamp Logo" width="150" height="150">
         <ul>
             <li><router-link to="/dashboard">Project Dashboard</router-link></li>
             <li><router-link to="/storepage">Store</router-link></li>
@@ -8,6 +8,7 @@
             <li><router-link to="/downloadpage">Downloads</router-link></li>
             <li><router-link to="/">Account</router-link></li>
         </ul>
+        <h1 class="sidebar-header">Waterdamp</h1>
     </div>
 </template>
 
@@ -26,8 +27,10 @@
     }
 
     .sidebar-header {
-        color: #fe1f4c; /* Bright pink background color */
+        color: white;
         margin-bottom: 20px;
+        position: fixed;
+        bottom: 0px;
     }
 
     .sidebar ul {

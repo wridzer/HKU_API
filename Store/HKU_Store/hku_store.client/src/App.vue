@@ -34,14 +34,12 @@ header {
     background-color: #f4f4f4; /* Achtergrondkleur van de sidebar */
 }
 
-.content {
-    flex: 1; /* Neemt de resterende ruimte in beslag */
-    overflow: auto; /* Voegt scroll toe indien nodig */
-    padding: 20px;
-    padding-top: 100px;
-    flex-grow: 1; /* Takes up all available space */
-    margin-left: 200px; /* Space for the sidebar */
-}
+    .content {
+        flex-grow: 1; /* Takes up all available space */
+        overflow: auto; /* Adds scroll if needed */
+        padding: 20px;
+        padding-top: 100px;
+    }
 
 html, body {
     margin: 0;

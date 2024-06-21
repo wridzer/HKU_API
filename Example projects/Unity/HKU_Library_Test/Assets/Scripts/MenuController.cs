@@ -165,7 +165,6 @@ public class MenuController : MonoBehaviour
                     Debug.Log($"Entry: {entry.Rank} - {entry.PlayerID} - {entry.Score}"); // Voeg debuginformatie toe
                     GameObject leaderboardEntry = Instantiate(LeaderboardEntryPrefab, LeaderboardSelectPanel.transform);
                     string username = hku.GetUsername(entry.PlayerID);
-                    //leaderboardEntry.GetComponentInChildren<TMP_Text>().text = entry.Rank + " - " + hku.GetUsername(entry.PlayerID) + " - " + entry.Score;
                     leaderboardEntry.GetComponentInChildren<TMP_Text>().text = entry.Rank + " - " + username + " - " + entry.Score;
                 }
             }

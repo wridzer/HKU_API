@@ -35,6 +35,7 @@ extern "C" EXPORT void GetLeaderboard(char* leaderboard_Id, char**& outArray, in
 extern "C" EXPORT void GetLeaderboardsForProject(char**& outArray, void(*callback)(bool IsSuccess, void* context), void* context);
 extern "C" EXPORT void UploadLeaderboardScore(char* leaderboard, int score, void (*callback)(bool IsSuccess, int currentRank, void* context), void* context = nullptr);
 extern "C" EXPORT void SetOutputCallback(void (*callback)(const char* message, void* context), void* context = nullptr);
+extern "C" EXPORT void FreeMemory(void* ptr);
 void SendMessageToCallback(const char* format, ...);
 
 #endif //PCH_H

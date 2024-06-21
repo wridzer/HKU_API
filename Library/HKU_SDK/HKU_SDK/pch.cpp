@@ -526,7 +526,7 @@ void SendMessageToCallback(const char* format, ...) {
     }
 }
 
-extern "C" void FreeMemory(void* ptr)
+void FreeMemory(void* ptr)
 {
     if (ptr) {
         delete[] ptr;

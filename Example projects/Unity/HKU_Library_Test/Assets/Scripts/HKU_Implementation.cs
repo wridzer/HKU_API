@@ -128,7 +128,7 @@ public class HKU_Implementation
                 // Parse outArrayPtr to LeaderboardEntry array and invoke the callback
                 HKU.LeaderboardEntry[] entries = MarshalPtrToLeaderboardEntryArray(outArrayPtr);
                 callback(entries);
-                //FreeMemory(outArrayPtr); // Free the memory
+                ReleaseMemory(outArrayPtr); // Free the memory
             }
             else
             {
@@ -190,7 +190,7 @@ public class HKU_Implementation
     {
         if (ptr != IntPtr.Zero)
         {
-            //FreeMemory(ptr);
+            FreeMemory(ptr);
         }
     }
 

@@ -4,11 +4,15 @@
             <nav>
                 <ul>
                     <li><a href="#setup">Setup</a></li>
-                    <li><a href="#configuration">Configuration</a></li>
-                    <li><a href="#authentication">User Authentication</a></li>
-                    <li><a href="#user-data">User Data</a></li>
-                    <li><a href="#leaderboards">Leaderboards</a></li>
-                    <li><a href="#debugging">Debugging</a></li>
+                    <li><a href="#beforeWeStart">Before We Start</a></li>
+                    <li><a href="#initialization">Initialization</a></li>
+                    <li><a href="#DebugOutput">Configure Debug Output</a></li>
+                    <li><a href="#project">Configure Project</a></li>
+                    <li><a href="#login">Login</a></li>
+                    <li><a href="#username">Get Username</a></li>
+                    <li><a href="#Leaderboards">Leaderboards</a></li>
+                    <li><a href="#cleanup">Memory Cleanup</a></li>
+                    <li><a href="#fullScript">Full Script</a></li>
                 </ul>
             </nav>
         </aside>
@@ -30,13 +34,13 @@
                 </section>
 
                 <section>
-                    <h2>Before We Start</h2>
+                    <h2 id="beforeWeStart">Before We Start</h2>
                     <p>There are a few concepts I'd like to explain before we start. The DLL makes use of callbacks. That means that you will send a function as a parameter. When the DLL is done it will call the function you've passed along.</p>
                     <p>It will also need context, this is the object the function will be called on. You could have multiple enemies in a game for instance so there needs to be a way of telling on which one the callback function should be called.</p>
                 </section>
 
                 <section>
-                    <h2>Initialization</h2>
+                    <h2 id="initialization">Initialization</h2>
                     <p>To start we will make a simple class that will handle most of the function calls and will just print the information to the console. Because we'll just be using this class we can just send the keyword "this" as the context. However, this will first need to be cast to a void pointer because that is what the DLL expects.</p>
                     <pre><code>
 using static HKU.HKUApiWrapper;
@@ -56,7 +60,7 @@ public class HKUImplementation
                 </section>
 
                 <section>
-                    <h2>Configure Debug Output</h2>
+                    <h2 id="DebugOutput">Configure Debug Output</h2>
                     <p>This will make sure that you can receive feedback from the DLL. This will be useful for configuration and debugging. You can see I am using a so-called lambda function that I pass along to the function call. This will now make sure that everything will be printed in the Unity console.</p>
                     <pre><code>
 public void Initialize()
@@ -75,7 +79,7 @@ public void Initialize()
                 </section>
 
                 <section>
-                    <h2>Configure Project</h2>
+                    <h2 id="project">Configure Project</h2>
                     <p>Next, we will need to configure the project so the DLL knows what project this is.</p>
                     <pre><code>
 bool isConfigured = false;
@@ -113,7 +117,7 @@ public void Initialize()
                 </section>
 
                 <section>
-                    <h2>Login</h2>
+                    <h2 id="login">Login</h2>
                     <p>Next we will create the Login. For the login, it is important that you first open the login page and then start polling for a result. This will look something like this:</p>
                     <pre><code>
 public void Login()
@@ -158,7 +162,7 @@ public void Logoff()
                 </section>
 
                 <section>
-                    <h2>Get Username</h2>
+                    <h2 id="username">Get Username</h2>
                     <p>You can now test to see if the login works by adding a button or using a context menu if you are familiar with them. If it does, it should print the ID of the user. This is the way users are handled in the backend, but to the user, you might want to show a username. To do so, create the following function and call it when you receive the ID.</p>
                     <pre><code>
 public string GetUsername(string userID)
@@ -186,7 +190,7 @@ Debug.Log("Login successful with user: " + GetUsername(Id));
                 </section>
 
                 <section>
-                    <h2>Leaderboards</h2>
+                    <h2 id="Leaderboards">Leaderboards</h2>
                     <p>Now that we got the login stuff handled, we move on to the leaderboards. The two main things are of course uploading the score to the leaderboard and fetching it to see the scores. After that, I'll also show how to fetch all the existing leaderboards so you can fetch them dynamically.</p>
                     <pre><code>
 public void UploadScore(string leaderboard, int score)
@@ -302,9 +306,33 @@ private (string name, string id)[] MarshalPtrToNameIdArray(IntPtr ptr)
 }
                     </code></pre>
                 </section>
+                <section>
+                    <h2 id="cleanup">Memory Cleanup</h2>
+                    <p>Lastly we just have to clean up the memory we've allocated for the leaderboard pointers. To do this we will create a function to delete the pointers and also destroy the context pointer on destroy.</p>
+                    <pre><code>
+ReleaseMemory(outArrayPtr) // Add this to the callback functions
+
+// Cleanup
+private void ReleaseMemory(IntPtr ptr)
+{
+    if (ptr != IntPtr.Zero)
+    {
+        FreeMemory(ptr);
+    }
+}
+
+private void OnDestroy()
+{
+    if (gch.IsAllocated)
+    {
+        gch.Free();
+    }
+}
+                    </code></pre>
+                </section>
 
                 <section>
-                    <h2>Full Script</h2>
+                    <h2 id="fullScript">Full Script</h2>
                     <p>Your full script should now look something like this:</p>
                     <pre><code>
 using System;
@@ -347,6 +375,7 @@ public class HKUImplementation
         ConfigureProject(projectID, myConfigureProjectCallbackDelegate, IntPtr.Zero);
     }
 
+    [ContextMenu("Login")]
     public void Login()
     {
         // Open login page
@@ -434,6 +463,7 @@ public class HKUImplementation
                 // Parse outArrayPtr to LeaderboardEntry array and invoke the callback
                 HKU.LeaderboardEntry[] entries = MarshalPtrToLeaderboardEntryArray(outArrayPtr);
                 callback(entries);
+                ReleaseMemory(outArrayPtr); // Free the memory
             }
             else
             {
@@ -470,7 +500,7 @@ public class HKUImplementation
         return result;
     }
 
-    public void GetLeaderboards(Action<(string name, string id)[]> callback)
+    public void GetLeaderboards(Action&lt;(string name, string id)[]> callback)
     {
         IntPtr outArrayPtr = IntPtr.Zero;
         GetLeaderboardsForProjectCallbackDelegate myGetLeaderboardsForProjectCallbackDelegate = (isSuccess, context) =>
@@ -484,6 +514,7 @@ public class HKUImplementation
                     Debug.Log($"Leaderboard: Name = {leaderboard.name}, ID = {leaderboard.id}"); // Debugging information
                 }
                 callback(leaderboards);
+                ReleaseMemory(outArrayPtr); // Free the memory
             }
             else
             {
@@ -513,6 +544,23 @@ public class HKUImplementation
         }
 
         return result;
+    }
+
+    // Cleanup
+    private void ReleaseMemory(IntPtr ptr)
+    {
+        if (ptr != IntPtr.Zero)
+        {
+            FreeMemory(ptr);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (gch.IsAllocated)
+        {
+            gch.Free();
+        }
     }
 }
                     </code></pre>

@@ -203,6 +203,7 @@ void Logout(void(*callback)(bool IsSuccess, void* context), void* context)
 				auto responseJson = nlohmann::json::parse(readBuffer);
 				bool success = responseJson["Success"];
                 SendMessageToCallback("Request performed successfully! Success: %s", success);
+				currentUser = "";
 				callback(success, context);
 			}
 			catch (nlohmann::json::exception& e) {

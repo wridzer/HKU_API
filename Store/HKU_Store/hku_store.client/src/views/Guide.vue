@@ -47,10 +47,10 @@ using static HKU.HKUApiWrapper;
 
 public class HKUImplementation
 {
-    private GCHandle gch &#8203;:citation[oaicite:0]{index=0}&#8203;
-                            private IntPtr contextPtr = IntPtr.Zero;
+    private GCHandle gch;
+    private IntPtr contextPtr = IntPtr.Zero;
 
-    public void Initialize()
+    public void Awake()
     {
         gch = GCHandle.Alloc(this);
         contextPtr = GCHandle.ToIntPtr(gch);
@@ -63,7 +63,7 @@ public class HKUImplementation
                     <h2 id="DebugOutput">Configure Debug Output</h2>
                     <p>This will make sure that you can receive feedback from the DLL. This will be useful for configuration and debugging. You can see I am using a so-called lambda function that I pass along to the function call. This will now make sure that everything will be printed in the Unity console.</p>
                     <pre><code>
-public void Initialize()
+public void Awake()
 {
     gch = GCHandle.Alloc(this);
     contextPtr = GCHandle.ToIntPtr(gch);
@@ -85,7 +85,7 @@ public void Initialize()
 bool isConfigured = false;
 string projectID = "YOUR_PROJECT_ID_HERE";
 
-public void Initialize()
+public void Awake()
 {
     // this pointer for context
     gch = GCHandle.Alloc(this);

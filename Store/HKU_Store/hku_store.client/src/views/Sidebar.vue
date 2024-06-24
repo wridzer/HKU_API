@@ -3,7 +3,7 @@
         <img src="/favicon3.png" alt="Waterdamp Logo" width="150" height="150">
         <hr class="rounded">
         <ul>
-            <li><router-link to="/dashboard">Project Dashboard</router-link></li>
+            <li><router-link to="/dashboard">Dashboard</router-link></li>
             <li><router-link to="/storepage">Store</router-link></li>
             <li><router-link to="/guide">Guide</router-link></li>
             <li><router-link to="/downloadpage">Downloads</router-link></li>

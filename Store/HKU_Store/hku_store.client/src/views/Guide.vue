@@ -118,7 +118,7 @@ public void Initialize()
 
                 <section>
                     <h2 id="login">Login</h2>
-                    <p>Next we will create the Login. For the login, it is important that you first open the login page and then start polling for a result. This will look something like this:</p>
+                    <p>Next we will create the Login. For the login, it is important that you first call <code>OpenLoginPage();</code> and then call <code>StartPolling(callback, context);</code> to continuously keep polling for a result. This will look something like this:</p>
                     <pre><code>
 public void Login()
 {
@@ -193,7 +193,7 @@ Debug.Log("Login successful with user: " + GetUsername(Id));
                     <h2 id="Leaderboards">Leaderboards</h2>
                     <p>Now that we got the login stuff handled, we move on to the leaderboards. The two main things are of course uploading the score to the leaderboard and fetching it to see the scores. After that, I'll also show how to fetch all the existing leaderboards so you can fetch them dynamically.</p>
                     <pre><code>
-public void UploadScore(string leaderboard, int score)
+public void UploadScore(string leaderboardId, int score)
 {
     // Upload score
     UploadLeaderboardScoreCallbackDelegate myUploadLeaderboardScoreCallbackDelegate = (isSuccess, rank, context) =>
@@ -207,12 +207,12 @@ public void UploadScore(string leaderboard, int score)
             Debug.Log("Failed to upload score");
         }
     };
-    UploadLeaderboardScore(leaderboard, score, myUploadLeaderboardScoreCallbackDelegate, contextPtr);
+    UploadLeaderboardScore(leaderboardId, score, myUploadLeaderboardScoreCallbackDelegate, contextPtr);
 }
                     </code></pre>
                     <p>You will need two functions to get the leaderboard entries: one to get them and the <code>MarshalPtrToLeaderboardEntryArray</code> to cast them to actual entries.</p>
                     <pre><code>
-public void GetLeaderboardEntries(string leaderboard, int amount, GetEntryOptions option, Action&lt;HKU.LeaderboardEntry[]> callback)
+public void GetLeaderboardEntries(string leaderboardId, int amount, GetEntryOptions option, Action&lt;HKU.LeaderboardEntry[]> callback)
 {
     IntPtr outArrayPtr = IntPtr.Zero;
     LeaderboardCallbackDelegate myGetLeaderboardCallbackDelegate = (isSuccess, context) =>
@@ -228,7 +228,7 @@ public void GetLeaderboardEntries(string leaderboard, int amount, GetEntryOption
             callback(null);
         }
     };
-    GetLeaderboard(leaderboard, ref outArrayPtr, amount, option, myGetLeaderboardCallbackDelegate, contextPtr);
+    GetLeaderboard(leaderboardId, ref outArrayPtr, amount, option, myGetLeaderboardCallbackDelegate, contextPtr);
 }
 
 private HKU.LeaderboardEntry[] MarshalPtrToLeaderboardEntryArray(IntPtr ptr)
@@ -258,6 +258,35 @@ private HKU.LeaderboardEntry[] MarshalPtrToLeaderboardEntryArray(IntPtr ptr)
     return result;
 }
                     </code></pre>
+                    <p>Here I have 2 simple examples of how you can quickly test the functions</p>
+                    <pre><code>
+    // A function to test the upload score functionality
+    [ContextMenu("UploadScore")]
+    public void UploadScoreTest()
+    {
+        UploadScore("YOUR_LEADERBOARD_ID_HERE", 100);
+    }
+
+    // A function to test the get leaderboard entries functionality
+    [ContextMenu("GetLeaderboardEntries")]
+    public void GetLeaderboardEntriesTest()
+    {
+        GetLeaderboardEntries("YOUR_LEADERBOARD_ID_HERE", 10, GetEntryOptions.Highest, (entries) =>
+        {
+            if (entries != null)
+            {
+                foreach (var entry in entries)
+                {
+                    Debug.Log($"PlayerID: {entry.PlayerID}, Score: {entry.Score}, Rank: {entry.Rank}");
+                }
+            }
+            else
+            {
+                Debug.Log("Failed to fetch leaderboard entries");
+            }
+        });
+    }
+                        </code></pre>
                     <p>The fetching of the leaderboards is similar to the fetching of the entries.</p>
                     <pre><code>
 public void GetLeaderboards(Action&lt;(string name, string id)[]> callback)
@@ -339,15 +368,16 @@ using System;
 using UnityEngine;
 using System.Runtime.InteropServices;
 using static HKU.HKUApiWrapper;
+using System.Runtime.Remoting.Contexts;
 
 public class HKUImplementation
 {
     private GCHandle gch;
     private IntPtr contextPtr = IntPtr.Zero;
     bool isConfigured = false;
-    string projectID = "YOU_PROJECT_ID_HERE";
+    string projectID = "YOUR_PROJECT_ID_HERE";
 
-    public void Initialize()
+    public void Awake()
     {
         // this pointer for context
         gch = GCHandle.Alloc(this);
@@ -436,7 +466,14 @@ public class HKUImplementation
         return username;
     }
 
-    public void UploadScore(string leaderboard, int score)
+    // A function to test the upload score functionality
+    [ContextMenu("UploadScore")]
+    public void UploadScoreTest()
+    {
+        UploadScore("YOUR_LEADERBOARD_ID_HERE", 100);
+    }
+
+    public void UploadScore(string leaderboardId, int score)
     {
         // Upload score
         UploadLeaderboardScoreCallbackDelegate myUploadLeaderboardScoreCallbackDelegate = (isSuccess, rank, context) =>
@@ -450,10 +487,30 @@ public class HKUImplementation
                 Debug.Log("Failed to upload score");
             }
         };
-        UploadLeaderboardScore(leaderboard, score, myUploadLeaderboardScoreCallbackDelegate, contextPtr);
+        UploadLeaderboardScore(leaderboardId, score, myUploadLeaderboardScoreCallbackDelegate, contextPtr);
     }
 
-    public void GetLeaderboardEntries(string leaderboard, int amount, GetEntryOptions option, Action&lt;HKU.LeaderboardEntry[]> callback)
+    // A function to test the get leaderboard entries functionality
+    [ContextMenu("GetLeaderboardEntries")]
+    public void GetLeaderboardEntriesTest()
+    {
+        GetLeaderboardEntries("YOUR_LEADERBOARD_ID_HERE", 10, GetEntryOptions.Highest, (entries) =>
+        {
+            if (entries != null)
+            {
+                foreach (var entry in entries)
+                {
+                    Debug.Log($"PlayerID: {entry.PlayerID}, Score: {entry.Score}, Rank: {entry.Rank}");
+                }
+            }
+            else
+            {
+                Debug.Log("Failed to fetch leaderboard entries");
+            }
+        });
+    }
+
+    public void GetLeaderboardEntries(string leaderboardId, int amount, GetEntryOptions option, Action&lt;HKU.LeaderboardEntry[]> callback)
     {
         IntPtr outArrayPtr = IntPtr.Zero;
         LeaderboardCallbackDelegate myGetLeaderboardCallbackDelegate = (isSuccess, context) =>
@@ -470,7 +527,7 @@ public class HKUImplementation
                 callback(null);
             }
         };
-        GetLeaderboard(leaderboard, ref outArrayPtr, amount, option, myGetLeaderboardCallbackDelegate, contextPtr);
+        GetLeaderboard(leaderboardId, ref outArrayPtr, amount, option, myGetLeaderboardCallbackDelegate, contextPtr);
     }
 
     private HKU.LeaderboardEntry[] MarshalPtrToLeaderboardEntryArray(IntPtr ptr)

@@ -43,9 +43,12 @@
                     <h2 id="initialization">Initialization</h2>
                     <p>To start we will make a simple class that will handle most of the function calls and will just print the information to the console. Because we'll just be using this class we can just send the keyword "this" as the context. However, this will first need to be cast to a void pointer because that is what the DLL expects.</p>
                     <pre><code>
+using System;
+using UnityEngine;
+using System.Runtime.InteropServices;
 using static HKU.HKUApiWrapper;
 
-public class HKUImplementation
+public class HKUImplementation : MonoBehaviour
 {
     private GCHandle gch;
     private IntPtr contextPtr = IntPtr.Zero;
@@ -368,9 +371,8 @@ using System;
 using UnityEngine;
 using System.Runtime.InteropServices;
 using static HKU.HKUApiWrapper;
-using System.Runtime.Remoting.Contexts;
 
-public class HKUImplementation
+public class HKUImplementation : MonoBehaviour
 {
     private GCHandle gch;
     private IntPtr contextPtr = IntPtr.Zero;

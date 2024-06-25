@@ -13,6 +13,7 @@
                     <li><a href="#Leaderboards">Leaderboards</a></li>
                     <li><a href="#cleanup">Memory Cleanup</a></li>
                     <li><a href="#fullScript">Full Script</a></li>
+                    <li><a href="#video">Video of implementation</a></li>
                 </ul>
             </nav>
         </aside>
@@ -624,6 +625,10 @@ public class HKUImplementation : MonoBehaviour
 }
                     </code></pre>
                     <p>Feel free to change stuff and make it fit your project!</p>
+                </section>
+                <section>
+                    <h2 id="video">Video of implementation</h2>
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/RhqZt00_rRk?si=KZqoUcItOWzp4I8f" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
                 </section>
             </div>
         </div>
